@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT in SUMO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap layout">
+  <aside class="route" aria-label="On this page"><span class="level-name">SUMO code</span><ol></ol></aside>
+  <main class="content">
+    <header class="level-head prose">
+      <h1>SCOOT in SUMO</h1>
+      <p class="lede">A SCOOT-style controller in Python that drives Eclipse SUMO through TraCI. Every second it reads the upstream detectors, updates each link's profile and queue model, and runs the split, offset and cycle optimisers. It writes logs and figures for every lab on this site.</p>
+    </header>
+
+    <section class="prose">
+      <h2 id="install" data-short="Install">Install and run</h2>
+      <p>Python 3.9 or newer. SUMO itself installs from pip (a system SUMO with <code>SUMO_HOME</code> set also works).</p>
+      <pre><code>git clone https://github.com/smrahmanbd/scoot-learning-lab.git
+cd scoot-learning-lab/sumo
+python -m pip install -r requirements.txt      # eclipse-sumo, traci, sumolib, numpy, matplotlib, pytest
+
+python foundation/03_fixed_vs_scoot.py --gui   # watch SCOOT in sumo-gui
+python run_all.py                              # every lab, about 15 minutes
+python tools/export_site_results.py            # copy figures and tables into the website
+python -m pytest tests -q                      # unit tests</code></pre>
+      <p>Every script accepts <code>--gui</code>, <code>--seed</code>, <code>--end</code> (demand duration in seconds) and <code>--out</code>. Results go to <code>sumo/results/&lt;level&gt;/</code>.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="layout" data-short="Repository layout">Repository layout</h2>
+      <pre><code>scoot-learning-lab/
+├── docs/                         the website (GitHub Pages)
+└── sumo/
+    ├── scoot/
+    │   ├── core.py               LPU, Robertson dispersion, queue model, DoS, PI,
+    │   │                         split / offset / cycle optimiser rules (no SUMO needed)
+    │   ├── controller.py         Link (model), Node (split + offset optimisers, bus priority),
+    │   │                         Region (cycle optimiser), ActuatedNode (baseline)
+    │   ├── network.py            corridor generator, upstream SCOOT detectors + stop-line loops
+    │   ├── runner.py             Scenario, run(), baselines, metrics, logs
+    │   ├── scenarios.py          Foundation (1 node) and Advanced (4-node region)
+    │   └── plots.py              figures
+    ├── foundation/  01_lpu_profiles_queue  02_validate_model  03_fixed_vs_scoot
+    ├── advanced/    01_corridor_scoot  02_ablation_study
+    ├── mastery/     01_cv_lpu  02_rl_split_optimiser  03_maxpressure
+    │                04_loop_faults_astrid  05_emissions_stop_weight  06_glosa_prediction
+    ├── tests/test_core.py
+    ├── tools/export_site_results.py
+    └── run_all.py</code></pre>
+    </section>
+
+    <section class="prose">
+      <h2 id="network" data-short="The test network">The test network and detectors</h2>
+      <p><code>network.build_corridor(n, spacing)</code> builds an east-west arterial with <code>n</code> signalised junctions and a side street at each. Every link entering a junction gets two kinds of loop on every lane:</p>
+      <dl class="defs">
+        <dt><code>up_&lt;lane&gt;</code></dt><dd>the SCOOT detector, 30 m after the start of the link (about 270 m before the stop line on the main road, 170 m on side streets).</dd>
+        <dt><code>loop_&lt;lane&gt;</code></dt><dd>a stop-line loop, used only by the actuated baseline and to check SCOOT's model against SUMO.</dd>
+      </dl>
+      <p>Each junction runs two stages: A for the main road (left turns permissive) and B for the side road; intergreens are 3 s amber plus 2 s all-red.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="model" data-short="Link model">The link model, every second</h2>
+      <pre><code># scoot/controller.py - Link.step()
+m = self.measure(t, tau, det_data)          # LPUs at the upstream detector this second
+self.buf.append(m); src = self.buf.pop(0)   # lag of beta * cruise time
+self.arr = F * src + (1 - F) * self.arr     # Robertson dispersion -> stop-line arrivals
+self.q += self.arr                          # arrivals join the queue
+if eff_green:
+    self.q -= min(self.q, self.sat)         # discharge at saturation occupancy
+self.cyc[tau] += self.arr                   # build this cycle's profile</code></pre>
+      <p>At the end of each region cycle the profile is smoothed (<code>prof = 0.75 prof + 0.25 this_cycle</code>). DoS for a link is <code>(sum(prof) + residual) / (effective green × SATO)</code>, raised by the congestion importance factor when the detector shows standing traffic.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="optimisers" data-short="Optimisers">The optimisers</h2>
+      <pre><code># Node.split_optimiser(k)   - 5 s before stage change k
+opts = core.split_options(change_times, k, intergreens, min_greens, C, authority=4)
+dos  = {d: self.max_dos(C, extra=d at k) for d in opts}
+d    = core.choose_split(dos)              # lowest max DoS, ties keep
+temp[k] += d                               # this cycle only
+change[k] += sign(d) * 1                   # permanent drift
+
+# Node.offset_optimiser()   - once per cycle
+pi = {d: self.offset_pi(C, d) for d in (-4, 0, +4)}   # queue model on links in and out
+change = [c + core.choose_offset(pi) for c in change]
+
+# Region.cycle_optimiser()  - every 300 s (150 s while rising)
+candidates = C - step, C, C + step (+8/12/16 s if critical DoS > 0.9)
+feasible   = predicted critical DoS <= 0.9 (<= 0.8 for shorter cycles)
+choose     = smallest increase if over target, else the feasible cycle with lowest PI</code></pre>
+    </section>
+
+    <section class="prose">
+      <h2 id="hooks" data-short="Research hooks">Research hooks</h2>
+      <div class="table-scroll"><table class="data">
+        <thead><tr><th>Setting in ScootConfig</th><th>What it changes</th><th>Used by</th></tr></thead>
+        <tbody>
+          <tr><td><code>split_opt / offset_opt / cycle_opt</code></td><td>switch each optimiser on or off</td><td>Advanced 2</td></tr>
+          <tr><td><code>congestion_importance</code>, <code>bus_priority</code></td><td>congestion weighting, extensions and recalls</td><td>Advanced 2</td></tr>
+          <tr><td><code>data_source="cv"</code>, <code>cv_penetration</code></td><td>LPUs from connected vehicles instead of loops</td><td>Mastery 1</td></tr>
+          <tr><td><code>split_chooser(node, k, dos_by_option)</code></td><td>replace the split decision rule</td><td>Mastery 2, 3</td></tr>
+          <tr><td><code>run(..., pure_controller=...)</code></td><td>replace SCOOT entirely</td><td>Mastery 3</td></tr>
+          <tr><td><code>sensor_filter</code>, <code>fault_handling="astrid"</code></td><td>inject detector faults; substitute historic profiles</td><td>Mastery 4</td></tr>
+          <tr><td><code>stop_weight</code></td><td>K in PI = delay + K × stops</td><td>Mastery 5</td></tr>
+          <tr><td><code>on_cycle_end(node, record)</code>, <code>log_links</code></td><td>logging per node cycle and per link second</td><td>Foundation 1, Mastery 4, 6</td></tr>
+        </tbody></table></div>
+    </section>
+
+    <section class="prose">
+      <h2 id="params" data-short="Parameters">Default parameters</h2>
+      <div class="table-scroll"><table class="data"><thead><tr><th>Parameter</th><th>Value</th><th>Source</th></tr></thead><tbody>
+        <tr><td>LPU per vehicle</td><td>1.95</td><td>validated (Lab F2)</td></tr>
+        <tr><td>cruise speed</td><td>13.5 m/s</td><td>validated</td></tr>
+        <tr><td>saturation occupancy</td><td>0.67 (main) / 0.89 (side) LPU/s per lane</td><td>validated</td></tr>
+        <tr><td>start lag / end lag</td><td>3 / 4 s</td><td>validated</td></tr>
+        <tr><td>split authority</td><td>±4 s temporary, ±1 s permanent, decided 5 s ahead</td><td>SCOOT practice</td></tr>
+        <tr><td>offset authority</td><td>±4 s once per cycle</td><td>SCOOT practice</td></tr>
+        <tr><td>cycle optimiser</td><td>every 300 s (150 s rising), 4/8/16 s steps, 40-120 s, target 90%</td><td>SCOOT practice</td></tr>
+        <tr><td>stop weight K</td><td>4 s</td><td>lab choice</td></tr>
+        <tr><td>bus priority</td><td>request within 120 m; extension up to 12 s; recall after min green + 2 s</td><td>lab choice</td></tr>
+      </tbody></table></div>
+      <p class="muted">Values marked "SCOOT practice" follow published descriptions; the rest are teaching values for this network, not TRL's settings.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="own" data-short="Your own network">Using your own network</h2>
+      <ol>
+        <li>Build or import a network with <code>netconvert</code> (for example from OpenStreetMap), with the junctions you want as <code>traffic_light</code>.</li>
+        <li>Add an <code>inductionLoop</code> named <code>up_&lt;lane&gt;</code> near the upstream end of every incoming lane, and record each link's detector-to-stop-line distance.</li>
+        <li>Define each node's stages and minimum greens; the lab uses two stages, and more stages need extra change times in <code>Node</code>.</li>
+        <li>Validate: run <code>foundation/02_validate_model.py</code>, adapted to your links, to set SATO, lags and cruise speed.</li>
+        <li>Group nodes into regions where coordination matters.</li>
+      </ol>
+    </section>
+  </main>
+</div>
+<script src="js/common.js"></script>
+</body>
+</html>

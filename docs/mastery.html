@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT Mastery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap layout">
+  <aside class="route" aria-label="On this page"><span class="level-name">Mastery</span><ol></ol></aside>
+  <main class="content">
+    <header class="level-head prose">
+      <span class="level-tag"><span class="shield">3</span>Level 3 of 3</span>
+      <h1>Research directions, implemented</h1>
+      <p class="lede">Six open questions about where model-based adaptive control like SCOOT is heading. Each has a working implementation on the lab's SUMO controller, the result it produced, and concrete next steps. Some first attempts do not beat standard SCOOT; that is the honest starting line for a thesis or a paper.</p>
+    </header>
+
+    <section class="prose">
+      <h2 id="method" data-short="How to do the research">How to evaluate a new SCOOT idea</h2>
+      <ol>
+        <li><strong>Change one thing.</strong> Each study swaps one part of SCOOT through a hook in <code>ScootConfig</code> (<code>data_source</code>, <code>split_chooser</code>, <code>sensor_filter</code> with <code>fault_handling</code>, <code>stop_weight</code>) and keeps everything else standard.</li>
+        <li><strong>Compare against baselines</strong> on identical demand and seeds: fixed time, vehicle actuation and standard SCOOT.</li>
+        <li><strong>Use several seeds</strong> and report the spread, not your best run.</li>
+        <li><strong>Report more than delay:</strong> stops, bus delay and emissions can move in different directions.</li>
+        <li><strong>Count every second of delay.</strong> The lab adds time spent waiting to enter the network, so a method cannot look good by pushing queues off the map.</li>
+        <li><strong>Ask what would stop deployment:</strong> validation effort, explainability, data availability, robustness to faulty detectors.</li>
+      </ol>
+      <pre><code>python run_all.py mastery          # all six studies, about 10 minutes
+python tools/export_site_results.py # refresh the numbers on this page</code></pre>
+    </section>
+
+    <!-- 1 CV -->
+    <section class="prose research">
+      <h2 id="cv" data-short="Connected-vehicle data">1. SCOOT on connected-vehicle data instead of loops</h2>
+      <p class="rq">Could probe or connected-vehicle (CV) data replace SCOOT's upstream loops, and what penetration does the model need?</p>
+      <p>Upstream loops are costly and fail often, and SCOOT 7 already accepts cooperative data. The simplest substitute is a virtual detector: count connected vehicles crossing the detector position and scale up by the penetration rate <code>p</code>.</p>
+      <div class="formula">LPU_hat = (connected vehicles crossing the virtual detector) / p × LPU per vehicle</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>How noisy is a scaled-up CV count?</h4><span class="hint">2,000 simulated cycles of the same true traffic on one link</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="cvCv" style="height:200px" aria-label="Histogram of estimated LPU per cycle"></canvas>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="cvP">CV penetration p</label><output id="cvPo"></output><input type="range" id="cvP" min="0.02" max="1" step="0.01" value="0.1"></div>
+            <div class="ctl"><label for="cvN">Vehicles per cycle (true)</label><output id="cvNo"></output><input type="range" id="cvN" min="3" max="40" value="18"></div>
+          </div>
+          <div class="readout"><div><b id="cvTrue">–</b><span>true LPU per cycle</span></div><div><b id="cvSd">–</b><span>error, std. dev.</span></div><div><b id="cvZero">–</b><span>cycles seeing no CV</span></div></div>
+        </div>
+        <p class="muted" style="margin:0;font-size:.92rem">SCOOT smooths profiles over several cycles, so per-cycle noise is partly averaged out. The SUMO study measures how much.</p>
+      </div>
+    </div>
+    <section class="prose">
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/01_cv_lpu.py</code>; estimator in <code>Link.measure()</code> with <code>data_source="cv"</code>. Part A replays the estimator on the same vehicles that crossed the loops; Part B runs SCOOT on CV data alone.</dd></dl>
+      <div class="table-scroll" id="cvTable"></div>
+      <figure><img src="assets/results/mastery_cv_accuracy.png" alt="Relative error of one-minute LPU totals against CV penetration" loading="lazy"><figcaption>Error of one-minute LPU totals, CV estimate against loops, on identical traffic.</figcaption></figure>
+      <p id="cvFound"><strong>What we found.</strong> Counts of connected vehicles are a noisy stand-in for LPUs: one-minute totals were off by 121% at 5% penetration, 53% at 25% and still 23% at 100%, because a count ignores occupancy. In closed loop the picture is better. SCOOT on CV data alone came within 11% of loop-based SCOOT at 25% penetration (33.9 against 30.4 s), and at 50% and 100% it was <em>better</em> (27.5 and 26.3 s). When queues crawl over an upstream loop, occupancy inflates the loop's LPUs; counts do not have that problem. Below 10% penetration control degrades clearly (43.7 s at 5%).</p>
+      <p><strong>Take it further.</strong> Use trajectories, not just counts: where connected vehicles join the back of the queue gives the queue directly (shockwave theory) and could replace the queue model's prediction step. Fuse loops and CVs with a Kalman filter; estimate penetration online; validate SATO and cruise time automatically from trajectories.</p>
+    </section>
+
+    <!-- 2 RL -->
+    <section class="prose research">
+      <h2 id="rl" data-short="Learning split optimiser">2. A learning split optimiser inside SCOOT</h2>
+      <p class="rq">SCOOT's split optimiser makes a three-way choice (retard, keep, advance) from a hand-built rule. Can a learning agent make that same choice better, while every other SCOOT safeguard stays?</p>
+      <p>Replacing a whole controller with deep reinforcement learning is hard to certify and explain. Keeping SCOOT's action set, minimum greens, offsets and cycle optimiser, and learning only the split decision, keeps the safety envelope.</p>
+      <div class="formula">state  = (stage ending, bin DoS ending stage, bin DoS next stage, bin modelled queue)
+action = −4, 0, +4 s
+reward = − change in modelled queue until the next decision at this node</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Train a split agent in your browser</h4><span class="hint">Two-stage junction, 60 s cycle; demand swings between the stages. The agent adjusts green A by −4, 0 or +4 s each cycle.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="rlCv" style="height:210px" aria-label="Learning curve"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>Q-learning, mean queue per episode</span><span><i style="background:var(--amber)"></i>SCOOT DoS rule</span><span><i style="background:var(--muted)"></i>fixed split</span></div>
+        <div class="bay-split">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:start"><button class="btn" type="button" id="rlGo">Train 300 episodes</button><button class="btn ghost" type="button" id="rlReset">Reset</button></div>
+          <div class="readout"><div><b id="rlEp">0</b><span>episodes</span></div><div><b id="rlQ">–</b><span>agent queue (last 20)</span></div><div><b id="rlDs">–</b><span>DoS-rule queue</span></div></div>
+        </div>
+      </div>
+    </div>
+    <section class="prose">
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/02_rl_split_optimiser.py</code> (<code>split_chooser</code> hook). Trains on varied seeds, evaluates greedily on three unseen seeds of the full region scenario.</dd></dl>
+      <div class="table-scroll" id="rlTable"></div>
+      <p id="rlFound"><strong>What we found.</strong> Not yet. Ten short training runs were unstable (33 to 214 s per episode), and on three unseen seeds the greedy agent averaged 67.7 s against SCOOT's 37.8 s, with more than twice the bus delay. The browser toy shows the idea can work on a small problem; on the full model the state is too coarse, the reward too noisy and the training far too short. A useful negative result to start from.</p>
+      <p><strong>Take it further.</strong> Richer state (profiles, congestion, downstream occupancy); longer training with replay or a small DQN; offline RL from logged SCOOT decisions; learning the offset decision too, with a shared reward across neighbouring nodes.</p>
+    </section>
+
+    <!-- 3 MP -->
+    <section class="prose research">
+      <h2 id="mp" data-short="Max-pressure">3. SCOOT against max-pressure, and a spill-back-aware SCOOT</h2>
+      <p class="rq">SCOOT's DoS looks only at the approach. Max-pressure uses upstream queue minus downstream load, so it reacts to blocked exits, but it is acyclic and ignores progression. What does each buy?</p>
+      <div class="formula">exit-aware split score = max over links of DoS_link / (1 + λ × blocking of the link's exit)
+blocking = how far the downstream link's modelled queue is above 30% of its storage</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>DoS rule vs pressure-aware rule</h4><span class="hint">Stage A's exit is filling up. Which way should the next stage change move?</span></div>
+      <div class="bay-body bay-split">
+        <div class="controls">
+          <div class="ctl"><label for="mpDa">DoS stage A</label><output id="mpDao"></output><input type="range" id="mpDa" min="0.3" max="1.2" step="0.01" value="0.92"></div>
+          <div class="ctl"><label for="mpDb">DoS stage B</label><output id="mpDbo"></output><input type="range" id="mpDb" min="0.3" max="1.2" step="0.01" value="0.78"></div>
+          <div class="ctl"><label for="mpOa">Exit blocking, stage A traffic</label><output id="mpOao"></output><input type="range" id="mpOa" min="0" max="1" step="0.05" value="0.6"></div>
+          <div class="ctl"><label for="mpL">λ</label><output id="mpLo"></output><input type="range" id="mpL" min="0" max="2" step="0.1" value="1"></div>
+        </div>
+        <div><div class="table-scroll" style="margin-top:0"><table class="data"><thead><tr><th>Rule</th><th>Score −4</th><th>Score 0</th><th>Score +4</th><th>Choice</th></tr></thead><tbody id="mpT"></tbody></table></div>
+          <p class="muted" style="font-size:.92rem">"+4" lengthens stage A. When A's exit is full, extra green for A moves few vehicles, so the exit-aware score discounts A and gives the time to B.</p></div>
+      </div>
+    </div>
+    <section class="prose">
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/03_maxpressure.py</code>: <code>MaxPressure</code> (pure, acyclic, every 5 s after minimum green) and a pressure-aware <code>split_chooser</code>.</dd></dl>
+      <div class="table-scroll" id="mpTable"></div>
+      <figure><img src="assets/results/mastery_maxpressure.png" alt="Delay, stops and bus delay for SCOOT, pure max-pressure and pressure-aware SCOOT" loading="lazy"><figcaption>Same region, demand and seed, with 300 m and 120 m spacing between junctions.</figcaption></figure>
+      <p id="mpFound"><strong>What we found.</strong> Pure max-pressure doubled delay on 300 m links (68.3 against 30.4 s) and almost tripled stops: without a cycle there is no progression. On 120 m links it collapsed into spill-back gridlock (224 s). Exit-aware SCOOT never changed a decision on 300 m links because no exit ever filled; on 120 m links it changed 8 decisions and was slightly worse (29.7 against 28.7 s). On this network SCOOT's own optimisers already kept exits clear, so the idea needs a harder test case.</p>
+      <p><strong>Take it further.</strong> Test where spill-back dominates: a grid with short links. Use pressure in the offset optimiser's PI; add perimeter control (gating) driven by the network's macroscopic fundamental diagram.</p>
+    </section>
+
+    <!-- 4 faults -->
+    <section class="prose research">
+      <h2 id="faults" data-short="Faults and ASTRID">4. Detector faults and historic substitution</h2>
+      <p class="rq">Every SCOOT link depends on one upstream detector. How much does a failed loop cost, and how much does substituting historic data, as SCOOT does with ASTRID, recover?</p>
+      <p>A <strong>stuck-on</strong> detector reports a solid queue: SCOOT sees enormous demand and congestion, starves the other stages and lengthens the cycle. A <strong>stuck-off</strong> detector reports no traffic: the link's green shrinks to its minimum while real vehicles queue. SCOOT's fault logic flags implausible detectors and substitutes historic profiles.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>What the split optimiser sees</h4><span class="hint">Two-stage node; the main road's detector fails</span></div>
+      <div class="bay-body bay-split">
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Detector state" id="ftType"><button type="button" data-f="ok" aria-pressed="true">Healthy</button><button type="button" data-f="off">Stuck off</button><button type="button" data-f="on">Stuck on</button></div>
+          <div class="seg" role="group" aria-label="Handling" id="ftHand"><button type="button" data-h="none" aria-pressed="true">Use raw data</button><button type="button" data-h="astrid">Substitute history</button></div>
+        </div>
+        <div class="readout"><div><b id="ftMeas">–</b><span>main road LPU per cycle seen</span></div><div><b id="ftDos">–</b><span>modelled DoS A / B</span></div><div><b id="ftGreen">–</b><span>green A the split optimiser drifts to</span></div><div><b id="ftReal">–</b><span>real DoS A at that green</span></div></div>
+      </div>
+    </div>
+    <section class="prose">
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/04_loop_faults_astrid.py</code>: 30% of detectors fail at minute 25 (half stuck-on, half stuck-off). Flagged after 2 min continuously occupied or 10 min silent; <code>fault_handling="astrid"</code> substitutes each link's profile recorded before the failure.</dd></dl>
+      <div class="table-scroll" id="ftTable"></div>
+      <figure><img src="assets/results/mastery_faults.png" alt="Delay, stops and bus delay for healthy, raw faulty data and historic substitution" loading="lazy"><figcaption>Detector failures from minute 25 of the 90-minute region scenario.</figcaption></figure>
+      <p id="ftFound"><strong>What we found.</strong> Thirteen of the 40 SCOOT detectors failed. Using their data as if it were real more than doubled delay (69.6 against 30.4 s). Substituting each link's historic profile brought delay back to 42.4 s, recovering about 70% of the loss, with stops even slightly below the healthy run. History works because traffic in the failure period resembled the recorded profile; it would go stale on an unusual day.</p>
+      <p><strong>Take it further.</strong> Detect subtle faults (drift, crosstalk, a loop counting half the traffic); substitute from neighbouring links, stop-line loops or connected vehicles instead of history; measure how fast each substitute goes stale when traffic differs from the historic day.</p>
+    </section>
+
+    <!-- 5 emissions -->
+    <section class="prose research">
+      <h2 id="emissions" data-short="Emissions">5. Emissions-aware SCOOT: the price of a stop</h2>
+      <p class="rq">The performance index is delay + K × stops. Stops burn fuel. How do delay, stops and CO2 trade off as K changes?</p>
+      <p>TRANSYT's fuel-minimising weighting is about 20 seconds of delay per stop; SCOOT normally uses much less. SCOOT has offered emissions estimates since version 4 and emissions optimisation since 4.4. SUMO's HBEFA model gives CO2 for every vehicle.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>One link, one offset decision, different K</h4><span class="hint">Platoon from the upstream node meets this node's green; the offset minimising PI depends on K</span></div>
+      <div class="bay-body bay-split">
+        <div class="controls"><div class="ctl"><label for="emK">Stop weight K (s per stop)</label><output id="emKo"></output><input type="range" id="emK" min="0" max="40" value="4"></div></div>
+        <div class="readout"><div><b id="emOff">–</b><span>best offset (s)</span></div><div><b id="emDelay">–</b><span>delay (veh·s / cycle)</span></div><div><b id="emStops">–</b><span>stops / cycle</span></div></div>
+      </div>
+    </div>
+    <section class="prose">
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/05_emissions_stop_weight.py</code>: K = 0, 4, 12, 20, 40 on the region, SUMO emission devices on every vehicle.</dd></dl>
+      <div class="table-scroll" id="emTable"></div>
+      <figure><img src="assets/results/mastery_emissions.png" alt="Delay, stops and CO2 per vehicle for each stop weight" loading="lazy"><figcaption>Each run changes only K in the split and offset optimisers' performance index.</figcaption></figure>
+      <p id="emFound"><strong>What we found.</strong> There was no clean trade-off on this network. K = 0, 4, 20 and 40 all gave about 30 s delay, 1.05 to 1.15 stops per vehicle and 227 to 230 g CO2 per vehicle. The K = 12 run was worse on every measure (42 s, 244 g) because one early decision sent the cycle optimiser down a different path. The lesson: SCOOT's many small decisions make single runs path-dependent, so test settings like K over several seeds before concluding anything.</p>
+      <p><strong>Take it further.</strong> Weight stops by vehicle type (a bus or truck stop costs far more), optimise NOx near schools, and test eco-driving connected vehicles together with SCOOT's emission weighting.</p>
+    </section>
+
+    <!-- 6 GLOSA -->
+    <section class="prose research">
+      <h2 id="glosa" data-short="GLOSA prediction">6. Predicting stage changes for GLOSA</h2>
+      <p class="rq">Green Light Optimal Speed Advisory needs to know when the current green will end. SCOOT keeps a schedule and changes it only in small steps; how predictable is it?</p>
+      <p>At every second of every green, the lab predicts the end of green from SCOOT's current schedule and compares it with what then happened. Temporary split moves, offset steps, cycle changes and bus priority all add error, and more of it the further ahead the prediction.</p>
+      <dl class="facts"><dt>Implementation</dt><dd><code>mastery/06_glosa_prediction.py</code>.</dd></dl>
+      <div class="table-scroll" id="glTable"></div>
+      <figure><img src="assets/results/mastery_glosa.png" alt="Prediction error against horizon" loading="lazy"><figcaption>Mean absolute error of the predicted end of green, by how far ahead it was predicted.</figcaption></figure>
+      <p id="glFound"><strong>What we found.</strong> Predicting from SCOOT's schedule works well: mean error between 1.3 and 2.6 s for horizons up to a minute, with the 90th percentile below 6 s. The error in the last 10 s is higher than at 10 to 20 s ahead, most likely from bus extensions and recalls, which move a change at short notice; longer horizons add temporary split moves, offset steps and cycle changes.</p>
+      <p><strong>Take it further.</strong> Publish a confidence band, not a single time; let SCOOT freeze its schedule for the last few seconds once a prediction has been sent; measure the fuel benefit of advice under realistic prediction error.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="more" data-short="More directions">More directions worth a project</h2>
+      <ul>
+        <li><strong>Automatic validation:</strong> estimate SATO, cruise time and lags continuously from data instead of a site visit.</li>
+        <li><strong>Pedestrians and cyclists:</strong> pedestrian SCOOT varies the crossing invitation by crowd size; extend the PI to person delay.</li>
+        <li><strong>Network gating:</strong> perimeter control using the macroscopic fundamental diagram, layered on SCOOT regions.</li>
+        <li><strong>Digital twins:</strong> keep a SUMO model calibrated from SCOOT and ASTRID data and test plan changes before deploying them.</li>
+        <li><strong>Incident detection:</strong> modern anomaly detection on SCOOT's link data, building on INGRID.</li>
+        <li><strong>Migration:</strong> how to compare SCOOT with newer systems (for example London's FUSION) fairly, on the same network and demand.</li>
+      </ul>
+      <h3>Reading list</h3>
+      <ul>
+        <li>Hunt, P. B., Robertson, D. I., Bretherton, R. D., &amp; Winton, R. I. (1981). <em>SCOOT: a traffic responsive method of coordinating signals.</em> TRRL Laboratory Report LR1014. <a href="https://www.trl.co.uk/uploads/trl/documents/LR1014.pdf">PDF</a></li>
+        <li>Department for Transport (1999). <em>The "SCOOT" urban traffic control system.</em> Traffic Advisory Leaflet 7/99. <a href="https://tsrgd.co.uk/pdf/tal/1999/tal-7-99.pdf">PDF</a></li>
+        <li>Robertson, D. I. (1969). TRANSYT: a traffic network study tool. RRL Report LR253.</li>
+        <li>Varaiya, P. (2013). Max pressure control of a network of signalized intersections. <em>Transportation Research Part C</em>, 36.</li>
+        <li>TRL Software. <a href="https://trlsoftware.com/software/intelligent-signal-control/scoot/scoot-version-history/">SCOOT version history</a>.</li>
+        <li>Lopez, P. A., et al. (2018). Microscopic traffic simulation using SUMO. <em>IEEE ITSC</em>.</li>
+      </ul>
+    </section>
+
+    <section class="prose">
+      <h2 id="quiz" data-short="Quiz">Check your understanding</h2>
+      <div class="quiz" id="quizM"></div>
+    </section>
+  </main>
+</div>
+<script src="js/engine.js"></script>
+<script src="js/quizdata.js"></script>
+<script src="js/results.js"></script>
+<script src="js/common.js"></script>
+<script src="js/mastery.js"></script>
+</body>
+</html>

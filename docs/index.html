@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT Learning Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Learn SCOOT, the Split Cycle Offset Optimisation Technique, in three levels with live simulators, quizzes, a mind map and a SCOOT-style controller for SUMO.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <div>
+      <h1>Learn SCOOT by running it</h1>
+      <p class="lede">SCOOT counts traffic far upstream, predicts the queue before it forms, and nudges splits, offsets and cycle times a few seconds at a time. This lab teaches it in three levels, with simulators you can drive in the browser and a SCOOT-style controller for Eclipse SUMO.</p>
+      <div class="quiz-nav">
+        <a class="btn" href="foundation.html" style="text-decoration:none">Start with Foundation</a>
+        <a class="btn ghost" href="sumo.html" style="text-decoration:none">Get the SUMO code</a>
+      </div>
+    </div>
+    <div>
+      <canvas class="sim" id="heroSim" aria-label="Live simulation of a junction under SCOOT control"></canvas>
+      <div class="readout" style="margin-top:10px">
+        <div><b id="hC">–</b><span>cycle time (s)</span></div>
+        <div><b id="hDs">–</b><span>modelled DoS, A / B</span></div>
+        <div><b id="hErr">–</b><span>model queue error (veh)</span></div>
+        <div><b id="hDelay">–</b><span>mean delay (s/veh)</span></div>
+      </div>
+      <p class="muted" style="font-size:.9rem;margin-top:8px">Live: each approach has a SCOOT detector near its far end. The amber bar beside each queue is SCOOT's model of that queue, built only from upstream counts. Main-road demand rises and falls every few minutes.</p>
+    </div>
+  </section>
+
+  <div class="levels">
+    <a href="foundation.html">
+      <span class="level-tag"><span class="shield">1</span>Foundation</span>
+      <h3>How SCOOT sees the street</h3>
+      <ul><li>Regions, nodes, links and stages</li><li>Upstream detectors and LPUs</li><li>Cyclic flow profiles and dispersion</li><li>The queue model, DoS and validation</li></ul>
+    </a>
+    <a href="advanced.html">
+      <span class="level-tag"><span class="shield">2</span>Advanced</span>
+      <h3>Three optimisers, one region</h3>
+      <ul><li>Split optimiser: temporary and permanent</li><li>Offset optimiser and the performance index</li><li>Cycle optimiser and double cycling</li><li>Congestion, gating, bus priority, ASTRID</li></ul>
+    </a>
+    <a href="mastery.html">
+      <span class="level-tag"><span class="shield">3</span>Mastery</span>
+      <h3>Where SCOOT research is going</h3>
+      <ul><li>Connected-vehicle data instead of loops</li><li>A learning split optimiser</li><li>Max-pressure and spill-back</li><li>Faults, emissions, GLOSA prediction</li></ul>
+    </a>
+  </div>
+
+  <h2 id="kit">What is in the lab</h2>
+  <div class="toolbelt">
+    <div><h4>Browser simulators</h4><p>Fifteen interactive models: a live junction with SCOOT's model queue, an LPU calculator, platoon dispersion, the queue model, a validation exercise, the three optimisers, gating, bus priority and research toys, including a split agent you train in the browser.</p></div>
+    <div><h4>SUMO controller</h4><p>A Python/TraCI SCOOT-style controller with link models and all three optimisers, a four-junction region, fixed and actuated baselines, and 11 scripts that reproduce every figure on this site.</p></div>
+    <div><h4>Quizzes</h4><p>42 questions with explanations across the three levels. Each level ends with its own quiz; the <a href="quiz.html">quiz bank</a> mixes them.</p></div>
+    <div><h4>Mind map</h4><p>An explorable map of every concept, coloured by level, with a short definition for each node. <a href="mindmap.html">Open the mind map</a>.</p></div>
+  </div>
+</main>
+<script src="js/engine.js"></script>
+<script src="js/intersection-sim.js"></script>
+<script src="js/common.js"></script>
+<script>
+  const sim = new IntersectionSim(document.getElementById('heroSim'), { mode: 'scoot', speed: 6 });
+  const base = { W: 600, E: 560, N: 280, S: 260 };
+  let phase = 0;
+  sim.on(r => { phase += (r.C || 60) / 900; const k = 0.75 + 0.5 * Math.max(0, Math.sin(phase)); sim.setDemand({ W: base.W * k, E: base.E * k, N: base.N, S: base.S }); });
+  setInterval(() => {
+    const s = sim.stats();
+    hC.textContent = s.C.toFixed(0); hDs.textContent = `${s.dos.A.toFixed(2)} / ${s.dos.B.toFixed(2)}`;
+    hErr.textContent = s.modelErr.toFixed(2); hDelay.textContent = s.avgDelay.toFixed(1);
+  }, 500);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) sim.start(); else { for (let i = 0; i < 400; i++) sim.tick(); sim.draw(); }
+  addEventListener('themechange', () => sim.draw());
+</script>
+</body>
+</html>

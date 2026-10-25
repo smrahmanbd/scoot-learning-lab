@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT Advanced</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap layout">
+  <aside class="route" aria-label="On this page"><span class="level-name">Advanced</span><ol></ol></aside>
+  <main class="content">
+    <header class="level-head prose">
+      <span class="level-tag"><span class="shield">2</span>Level 2 of 3</span>
+      <h1>Three optimisers, one region</h1>
+      <p class="lede">The split, offset and cycle optimisers each work on a different time scale, and each makes only small changes. Together they turn the link models into coordinated timings for a whole region. This level takes each one apart, then runs everything on a four-junction region in SUMO.</p>
+    </header>
+
+    <section class="prose">
+      <h2 id="regions" data-short="Regions and nodes">Regions, nodes and double cycling</h2>
+      <p>A <strong>region</strong> is a set of nodes that run on one common cycle time, so their offsets mean something. Region boundaries are drawn where links are long enough that coordination no longer matters. Unlike SCATS, SCOOT regions do not marry and divorce on line; the boundaries are part of the design.</p>
+      <p>A lightly loaded node, often a pedestrian crossing, can be <strong>double cycled</strong>: it runs two cycles for every region cycle, so pedestrians wait about half as long while the node still keeps step with its neighbours. SCOOT allows it only when the node stays under its saturation target at the shorter cycle.</p>
+      <div class="formula">Each optimiser works on its own time scale
+  split optimiser   a few seconds before every stage change      -4 / 0 / +4 s (temporary), ±1 s (permanent)
+  offset optimiser  once per cycle, per node                     -4 / 0 / +4 s
+  cycle optimiser   every 5 min (2.5 min while rising), region   ±4, 8 or 16 s, critical node at or below 90%</div>
+    </section>
+
+    <section class="prose">
+      <h2 id="split" data-short="Split optimiser">The split optimiser</h2>
+      <p>A few seconds before every scheduled stage change, SCOOT asks one question: should this change happen 4 seconds earlier, on time, or 4 seconds later? For each option the model predicts the degree of saturation of every link in the stage that is ending and the stage that is starting, and the option with the <strong>lowest maximum DoS</strong> wins. Minimum greens are always respected.</p>
+      <p>The chosen move is applied to this cycle only (a <em>temporary</em> change). A smaller <em>permanent</em> change of 1 second is made to the stored plan in the same direction, so the plan drifts towards the right split without reacting to a single noisy cycle. Most decisions are "keep": about two thirds in TRL's original description.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Split optimiser explorer</h4><span class="hint">Two stages, cycle 60 s, intergreens 5 s. Demand changes; watch temporary and permanent changes.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="spCv" style="height:210px" aria-label="Stored and actual stage A green over cycles"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>stored (permanent) green A</span><span><i style="background:var(--go)"></i>green A actually run</span><span><i style="background:var(--amber)"></i>green A that would balance DoS</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="spA">Stage A demand (LPU per cycle)</label><output id="spAo"></output><input type="range" id="spA" min="5" max="60" value="40"></div>
+            <div class="ctl"><label for="spB">Stage B demand (LPU per cycle)</label><output id="spBo"></output><input type="range" id="spB" min="5" max="40" value="14"></div>
+            <div class="ctl"><label for="spN">Cycle-to-cycle noise</label><output id="spNo"></output><input type="range" id="spN" min="0" max="0.4" step="0.05" value="0.2"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="spStep">Run 1 stage change</button><button class="btn ghost" type="button" id="spRun">Run 30 cycles</button><button class="btn ghost" type="button" id="spReset">Reset</button></div>
+          </div>
+          <div>
+            <div class="table-scroll" style="margin-top:0"><table class="data"><thead><tr><th>Option</th><th>Green A / B (s)</th><th>DoS A</th><th>DoS B</th><th>Max</th></tr></thead><tbody id="spT"></tbody></table></div>
+            <div class="readout" style="margin-top:10px"><div><b id="spKeep">–</b><span>decisions: retard / keep / advance</span></div><div><b id="spStored">–</b><span>stored green A (s)</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="offset" data-short="Offset optimiser">The offset optimiser</h2>
+      <p>Once per cycle, at a fixed point in each node's cycle, SCOOT asks whether the whole node should run 4 seconds earlier, on time, or 4 seconds later. For each option it re-runs the queue model on every link into the node and every link out of it to a neighbour, using the cyclic flow profiles, and adds up the <strong>performance index</strong> (delay plus weighted stops). The lowest wins. Because the step is small and taken every cycle, the offset climbs down the PI curve to a good coordination, and keeps tracking it as traffic changes.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Offset optimiser</h4><span class="hint">Two nodes 300 m apart. The curve is PI for every possible offset; SCOOT only ever looks ±4 s around where it is.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="ofCv" style="height:230px" aria-label="Performance index against offset"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>total PI</span><span><i style="background:var(--phase-b)"></i>eastbound link</span><span><i style="background:var(--stop)"></i>westbound link</span><span><i style="background:var(--amber);height:10px"></i>current offset</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="ofE">Eastbound flow (veh/h)</label><output id="ofEo"></output><input type="range" id="ofE" min="100" max="1400" step="50" value="1000"></div>
+            <div class="ctl"><label for="ofW">Westbound flow (veh/h)</label><output id="ofWo"></output><input type="range" id="ofW" min="100" max="1400" step="50" value="400"></div>
+            <div class="ctl"><label for="ofT">Cruise time between nodes</label><output id="ofTo"></output><input type="range" id="ofT" min="8" max="40" value="22"></div>
+            <div class="ctl"><label for="ofK">Stop weight K</label><output id="ofKo"></output><input type="range" id="ofK" min="0" max="20" value="4"></div>
+          </div>
+          <div class="controls">
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="ofStep">Run offset optimiser once</button><button class="btn ghost" type="button" id="ofAuto">Run 20 cycles</button><button class="btn ghost" type="button" id="ofRand">Random start</button></div>
+            <div class="readout"><div><b id="ofCur">–</b><span>current offset (s)</span></div><div><b id="ofPi">–</b><span>PI now</span></div><div><b id="ofBest">–</b><span>best offset (s)</span></div></div>
+            <p class="muted" id="ofTxt" style="margin:0;font-size:.92rem"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="cycle" data-short="Cycle optimiser">The cycle optimiser</h2>
+      <p>Every 5 minutes, or every 2.5 minutes while cycle times are rising, SCOOT reviews the region cycle. It finds the <strong>critical node</strong>, the one whose busiest link needs the longest cycle, and keeps it at or below about <strong>90% DoS</strong>: if any link is above target the cycle increases; if all are comfortably below it can decrease. Steps are 4, 8 or 16 seconds, larger at longer cycles, within the region's minimum and maximum. Within that limit the lab controller also prefers the cycle with the lower predicted performance index, so it does not run longer cycles than the traffic needs.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Cycle optimiser through a peak</h4><span class="hint">One critical node with 10 s lost time. Demand rises, holds, then falls.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="cyCv" style="height:230px" aria-label="Cycle time and critical DoS over a peak"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>cycle time (s)</span><span><i style="background:var(--stop)"></i>critical DoS × 100</span><span><i style="background:var(--muted)"></i>flow ratio Y × 100</span><span><i style="background:var(--amber)"></i>90% target</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="cyPk">Peak flow ratio Y</label><output id="cyPko"></output><input type="range" id="cyPk" min="0.4" max="0.85" step="0.01" value="0.72"></div>
+            <div class="ctl"><label for="cyMax">Maximum cycle</label><output id="cyMaxo"></output><input type="range" id="cyMax" min="80" max="160" step="8" value="120"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" id="cyPlay">Play the peak</button></div>
+          </div>
+          <div class="readout"><div><b id="cyC">–</b><span>cycle now (s)</span></div><div><b id="cyD">–</b><span>critical DoS</span></div><div><b id="cyA">–</b><span>last decision</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="congestion" data-short="Congestion and gating">Congestion, exit blocking and gating</h2>
+      <p>When a queue reaches back over the upstream detector, the detector sits occupied and the count no longer reflects demand. SCOOT measures this as the share of the cycle the detector is occupied by standing traffic. The engineer sets a <strong>congestion importance factor</strong> for each link, which raises that link's weight in the split optimiser so a congested link gets green before its queue blocks the junction upstream. <strong>Congestion offsets</strong> can also be set for links that must not block back. Later versions detect <strong>exit blocking</strong>, where a link cannot discharge because the road beyond it is full.</p>
+      <p><strong>Gating</strong> protects a critical bottleneck. When a critical link's saturation passes a threshold, SCOOT holds back traffic on chosen <em>gate</em> links further out, where queues do no harm, so the bottleneck keeps flowing instead of locking up.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Gating a bottleneck</h4><span class="hint">A short critical link (room for 25 vehicles) is fed by a long gate link. Demand peaks for 20 minutes.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="gtCv" style="height:230px" aria-label="Queues on critical and gate links"></canvas>
+        <div class="legend"><span><i style="background:var(--stop)"></i>critical link queue</span><span><i style="background:var(--phase-b)"></i>gate link queue</span><span><i style="background:var(--fg)"></i>bottleneck throughput (veh/min)</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="seg" role="group" aria-label="Gating" id="gtMode"><button type="button" data-g="off" aria-pressed="true">Gating off</button><button type="button" data-g="on">Gating on</button></div>
+            <div class="ctl"><label for="gtTh">Gate when critical DoS above</label><output id="gtTho"></output><input type="range" id="gtTh" min="0.7" max="1.0" step="0.01" value="0.85"></div>
+            <div class="ctl"><label for="gtPk">Peak demand (veh/h)</label><output id="gtPko"></output><input type="range" id="gtPk" min="800" max="2000" step="50" value="1500"></div>
+          </div>
+          <div class="readout"><div><b id="gtTp">–</b><span>vehicles through in 40 min</span></div><div><b id="gtBlk">–</b><span>minutes the junction was blocked</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="priority" data-short="Bus priority">Bus priority: extensions and recalls</h2>
+      <p>Buses are detected by selective vehicle detectors or by automatic vehicle location. SCOOT then uses two tools. An <strong>extension</strong> holds the current green a few seconds so a bus about to arrive gets through. A <strong>recall</strong> brings the bus's stage in early by cutting the current stage short, after its minimum green. After either, SCOOT <em>recovers</em>: the following stages are adjusted so the plan returns to its optimised timings within a cycle or two. The authority given to buses can be weighted by how important priority is on that route.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Extension or recall?</h4><span class="hint">Bus on the main road (stage A). Cycle 80 s: A 40 s, B 30 s, intergreens 5 s. Maximum extension 12 s.</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="ptCv" style="height:150px" aria-label="Signal timeline with and without priority"></canvas>
+        <div class="bay-split">
+          <div class="controls"><div class="ctl"><label for="ptT">Bus reaches the stop line at second</label><output id="ptTo"></output><input type="range" id="ptT" min="0" max="79" value="46"></div></div>
+          <div class="readout"><div><b id="ptD0">–</b><span>bus delay without priority (s)</span></div><div><b id="ptD1">–</b><span>bus delay with priority (s)</span></div><div><b id="ptX">–</b><span>action</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="features" data-short="The wider system">The wider SCOOT system</h2>
+      <div class="table-scroll"><table class="data">
+        <thead><tr><th>Feature</th><th>What it does</th><th>Since</th></tr></thead>
+        <tbody>
+          <tr><td>Bus priority (AVL / SVD)</td><td>extensions and recalls for detected buses</td><td>3.1 (1995)</td></tr>
+          <tr><td>ASTRID</td><td>database of SCOOT data; historic profiles feed fault substitution and peak warning</td><td>3.1</td></tr>
+          <tr><td>INGRID</td><td>real-time incident detection from SCOOT detectors and ASTRID history</td><td>3.1</td></tr>
+          <tr><td>Emissions estimates</td><td>CO, CO2, NOx, particulates, VOC by link, node or region</td><td>4.0 (1997)</td></tr>
+          <tr><td>Gating, double cycling, filtering</td><td>congestion management and low-demand efficiency</td><td>4.x</td></tr>
+          <tr><td>MC3: exit blocking, congestion supervisor</td><td>better behaviour in oversaturation</td><td>5.x (2006-08)</td></tr>
+          <tr><td>Pedestrian priority, low-flow features</td><td>variable invitation to cross, ghost staging, node cycle independence</td><td>6.0 (2010)</td></tr>
+          <tr><td>SCOOT 7</td><td>cooperative data (GLOSA), pedestrian SCOOT, multiple split optimisation, loop failure logic, cloud-first</td><td>7.0 (2020)</td></tr>
+        </tbody></table></div>
+      <p>Several cities are now moving to newer systems, for example Transport for London's FUSION. The principles on this page, model-based prediction and small incremental optimisation, carry over to them.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="sumo" data-short="Region in SUMO">The full system on a SUMO region</h2>
+      <p>Four junctions 300 m apart form one SCOOT region. Demand starts low, then comes a 30-minute eastbound peak, a westbound peak, and low traffic again, with buses every 4 minutes each way. All the mechanisms above run together.</p>
+      <div class="runit"><h4>Lab A1: SCOOT vs fixed vs actuated on the region</h4>
+        <pre><code>python advanced/01_corridor_scoot.py         # add --gui to watch</code></pre>
+        <div id="advTable" class="table-scroll"></div>
+        <figure><img src="assets/results/advanced_corridor_timeline.png" alt="SCOOT cycle time, critical DoS, offsets and stage A share over 90 minutes on four junctions" loading="lazy"><figcaption>As the eastbound peak overloads J1, the cycle optimiser lifts the cycle from 40 s to 88 s in three decisions over 5 minutes, then steps it back down by 8 s every 5 minutes. Offsets (relative to J1) and splits move continuously in small steps.</figcaption></figure>
+      </div>
+      <div class="runit"><h4>Lab A2: ablation, switch one mechanism off at a time</h4>
+        <pre><code>python advanced/02_ablation_study.py</code></pre>
+        <div id="ablTable" class="table-scroll"></div>
+        <figure><img src="assets/results/advanced_ablation.png" alt="Delay, stops and bus delay for each ablation variant" loading="lazy"><figcaption>Each bar removes one mechanism from full SCOOT on the same demand and seed.</figcaption></figure>
+        <p>Without the split optimiser delay more than doubles (77 s against 30 s): the initial 60/40 split cannot serve tidal peaks. Without offset optimisation delay rises to 40 s, and without bus priority buses lose 12 s each. Two surprises are worth discussing. Freezing the cycle at 60 s did slightly <em>better</em> (26.8 s): in the first peak the optimiser stretched the cycle to 88 s and then brought it down only 8 s every 5 minutes, so the region ran longer cycles than this demand needed. That is exactly why engineers tune each region's maximum cycle. Congestion importance made no difference, because on this network queues never reached the upstream detectors.</p>
+      </div>
+    </section>
+
+    <section class="prose">
+      <h2 id="quiz" data-short="Quiz">Check your understanding</h2>
+      <div class="quiz" id="quizA"></div>
+      <p>Next: <a href="mastery.html">Mastery</a>, where these mechanisms become research questions.</p>
+    </section>
+  </main>
+</div>
+<script src="js/engine.js"></script>
+<script src="js/quizdata.js"></script>
+<script src="js/results.js"></script>
+<script src="js/common.js"></script>
+<script src="js/advanced.js"></script>
+</body>
+</html>

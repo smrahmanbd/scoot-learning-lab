@@ -1,0 +1,65 @@
+/* Mind map of SCOOT concepts. lv: F = Foundation, A = Advanced, M = Mastery. */
+window.MINDMAP = { name: 'SCOOT', lv: 'F', d: 'Split Cycle Offset Optimisation Technique: centralised, model-based adaptive signal control developed by TRRL/TRL.', children: [
+ { name: 'Network vocabulary', lv: 'F', d: 'How SCOOT describes a network.', children: [
+   { name: 'Region', lv: 'F', d: 'Nodes sharing one cycle time; boundaries designed where coordination no longer matters.' },
+   { name: 'Node', lv: 'F', d: 'A signalled junction or crossing.' },
+   { name: 'Link', lv: 'F', d: 'An approach to a stop line, with its own detector and model.' },
+   { name: 'Stage', lv: 'F', d: 'A set of movements that run together.' },
+   { name: 'Split, cycle, offset', lv: 'F', d: 'The three timing variables in SCOOT\'s name.' },
+ ]},
+ { name: 'Detection', lv: 'F', d: 'How SCOOT measures traffic.', children: [
+   { name: 'Upstream detector', lv: 'F', d: 'Near the upstream end of each link, giving advance warning.' },
+   { name: 'LPU', lv: 'F', d: 'Link profile unit: hybrid of flow and occupancy; long vehicles count more.' },
+   { name: 'Cyclic flow profile', lv: 'F', d: 'Flow histogram over one cycle, smoothed over several cycles.' },
+ ]},
+ { name: 'Traffic model', lv: 'F', d: 'The per-second link model.', children: [
+   { name: 'Cruise time', lv: 'F', d: 'Detector to stop line at cruising speed.' },
+   { name: 'Platoon dispersion', lv: 'F', d: 'Robertson model, as in TRANSYT.' },
+   { name: 'Queue model', lv: 'F', d: 'Red: arrivals queue. Effective green: discharge at saturation occupancy.' },
+   { name: 'Degree of saturation', lv: 'F', d: '(arrivals + residual) / (effective green × SATO); target about 90%.' },
+   { name: 'Performance index', lv: 'F', d: 'Delay + K × stops; what the optimisers minimise.' },
+   { name: 'Congestion measure', lv: 'A', d: 'Share of cycle with standing traffic over the detector.' },
+ ]},
+ { name: 'Validation', lv: 'F', d: 'Calibrating each link to the street.', children: [
+   { name: 'Journey time', lv: 'F', d: 'Cruise time setting.' },
+   { name: 'Saturation occupancy', lv: 'F', d: 'Discharge rate in LPU/s.' },
+   { name: 'Start and end lag', lv: 'F', d: 'Offsets between signal green and effective green.' },
+   { name: 'Max queue clear time', lv: 'F', d: 'Limits modelled queue on long links.' },
+ ]},
+ { name: 'Optimisers', lv: 'A', d: 'Small, frequent changes: the elastic plan.', children: [
+   { name: 'Split optimiser', lv: 'A', d: 'Before every stage change: −4/0/+4 s temporary, ±1 s permanent; minimise max DoS.' },
+   { name: 'Offset optimiser', lv: 'A', d: 'Once per cycle per node: −4/0/+4 s; minimise PI on links in and out.' },
+   { name: 'Cycle optimiser', lv: 'A', d: 'Every 5 min (2.5 rising): 4/8/16 s steps; critical node at or below 90%.' },
+   { name: 'Double cycling', lv: 'A', d: 'Lightly loaded node runs at half the region cycle.' },
+ ]},
+ { name: 'Network management', lv: 'A', d: 'Tools for congestion and priorities.', children: [
+   { name: 'Congestion importance', lv: 'A', d: 'Weights congested links in the split optimiser.' },
+   { name: 'Congestion offsets', lv: 'A', d: 'Fixed offsets applied when a link is congested.' },
+   { name: 'Gating', lv: 'A', d: 'Hold traffic on gate links to protect a critical bottleneck.' },
+   { name: 'Exit blocking', lv: 'A', d: 'Detect links that cannot discharge (MC3).' },
+   { name: 'Bus priority', lv: 'A', d: 'Extensions and recalls via SVD or AVL, then recovery.' },
+   { name: 'Pedestrian SCOOT', lv: 'A', d: 'Crossing invitation varies with pedestrian numbers (SCOOT 6-7).' },
+ ]},
+ { name: 'Data services', lv: 'A', d: 'Around the optimisers.', children: [
+   { name: 'ASTRID', lv: 'A', d: 'Database of SCOOT data; historic profiles.' },
+   { name: 'INGRID', lv: 'A', d: 'Real-time incident detection.' },
+   { name: 'Emissions estimates', lv: 'A', d: 'CO, CO2, NOx, PM, VOC per link/node/region.' },
+   { name: 'Fault logic', lv: 'A', d: 'Flag implausible detectors; substitute data.' },
+ ]},
+ { name: 'SUMO lab', lv: 'F', d: 'Python/TraCI controller and experiments.', children: [
+   { name: 'scoot/core.py', lv: 'F', d: 'LPU, dispersion, queue model, DoS, PI, optimiser rules.' },
+   { name: 'scoot/controller.py', lv: 'A', d: 'Link, Node, Region classes; actuated baseline.' },
+   { name: 'Validation lab', lv: 'F', d: 'Measures SATO, lags, cruise speed from SUMO.' },
+   { name: 'Ablation study', lv: 'A', d: 'Switch one optimiser off at a time.' },
+ ]},
+ { name: 'Research directions', lv: 'M', d: 'Open questions with implementations.', children: [
+   { name: 'Connected-vehicle LPUs', lv: 'M', d: 'Replace loops with probe data; penetration study.' },
+   { name: 'Learning split optimiser', lv: 'M', d: 'Q-learning inside SCOOT\'s action set.' },
+   { name: 'Max-pressure', lv: 'M', d: 'Spill-back-aware splits; acyclic baseline.' },
+   { name: 'Faults and ASTRID', lv: 'M', d: 'Historic substitution for failed detectors.' },
+   { name: 'Emissions weighting', lv: 'M', d: 'Stop weight K vs delay, stops, CO2.' },
+   { name: 'GLOSA prediction', lv: 'M', d: 'Predicting stage changes for connected vehicles.' },
+   { name: 'Automatic validation', lv: 'M', d: 'Estimate model parameters continuously.' },
+   { name: 'Digital twin', lv: 'M', d: 'SUMO calibrated from SCOOT/ASTRID data.' },
+ ]},
+]};

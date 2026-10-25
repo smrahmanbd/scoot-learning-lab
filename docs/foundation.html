@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT Foundation</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<div class="wrap layout">
+  <aside class="route" aria-label="On this page"><span class="level-name">Foundation</span><ol></ol></aside>
+  <main class="content">
+    <header class="level-head prose">
+      <span class="level-tag"><span class="shield">1</span>Level 1 of 3</span>
+      <h1>How SCOOT sees the street</h1>
+      <p class="lede">SCOOT keeps a live model of every link. It counts traffic far upstream, predicts when it will reach the stop line, and works out the queue before it forms. This level builds that model piece by piece.</p>
+    </header>
+
+    <section class="prose">
+      <h2 id="what" data-short="What SCOOT is">What SCOOT is</h2>
+      <p>SCOOT, the Split Cycle Offset Optimisation Technique, was developed by the UK Transport and Road Research Laboratory (now TRL) for the Department of Transport, first released around 1980. It is a centralised, model-based adaptive system: a computer in the traffic control centre runs a traffic model of every link, second by second, and adjusts the three timing variables in its name by small, frequent amounts.</p>
+      <dl class="defs">
+        <dt>Split</dt><dd>How the cycle is shared between stages. Adjusted a few seconds before every stage change.</dd>
+        <dt>Cycle</dt><dd>The common cycle time of a region. Adjusted every 5 minutes (2.5 when traffic is rising).</dd>
+        <dt>Offset</dt><dd>When each junction's cycle runs relative to its neighbours. Adjusted once per cycle.</dd>
+      </dl>
+      <p>Its central idea is the <strong>elastic plan</strong>: rather than switching between stored plans, SCOOT nudges the current plan a few seconds at a time, so timings track demand smoothly and no single bad decision matters much. It has been developed through many versions; SCOOT 7 (2020) added cooperative-vehicle data, pedestrian SCOOT and a cloud-first design.</p>
+    </section>
+
+    <section class="prose">
+      <h2 id="arch" data-short="How it is built">How it is built</h2>
+      <p>SCOOT describes the network with four words. A <strong>region</strong> is a group of junctions sharing one cycle time. Each junction or crossing in it is a <strong>node</strong>. Each approach to a stop line is a <strong>link</strong>, with its own detector and its own model. Each set of movements that runs together is a <strong>stage</strong>.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>The SCOOT loop</h4><span class="hint">What happens every second, every stage change, every cycle and every 5 minutes</span></div>
+      <div class="bay-body" style="overflow-x:auto">
+        <svg viewBox="0 0 880 300" role="img" aria-label="SCOOT data flow: detectors to model to optimisers to signals" style="min-width:660px;width:100%;height:auto">
+          <style>.bx{fill:var(--surface);stroke:var(--fg);stroke-width:1.5}.hl{fill:var(--sunk);stroke:var(--amber);stroke-width:2}.tx{font:600 15px Barlow,sans-serif;fill:var(--fg)}.st{font:13px Barlow,sans-serif;fill:var(--muted)}.ln{stroke:var(--muted);stroke-width:1.6;fill:none;marker-end:url(#ah)}</style>
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+          <rect class="bx" x="10" y="40" width="160" height="70" rx="6"/><text class="tx" x="90" y="68" text-anchor="middle">Upstream detector</text><text class="st" x="90" y="88" text-anchor="middle">every 0.25 s on/off</text><text class="st" x="90" y="103" text-anchor="middle">→ LPUs each second</text>
+          <rect class="hl" x="220" y="20" width="200" height="110" rx="6"/><text class="tx" x="320" y="46" text-anchor="middle">Link model (per second)</text><text class="st" x="320" y="68" text-anchor="middle">cyclic flow profile</text><text class="st" x="320" y="86" text-anchor="middle">cruise time + dispersion</text><text class="st" x="320" y="104" text-anchor="middle">queue, delay, stops, DoS</text><text class="st" x="320" y="122" text-anchor="middle">congestion over detector</text>
+          <rect class="bx" x="480" y="10" width="190" height="56" rx="6"/><text class="tx" x="575" y="34" text-anchor="middle">Split optimiser</text><text class="st" x="575" y="54" text-anchor="middle">before every stage change</text>
+          <rect class="bx" x="480" y="78" width="190" height="56" rx="6"/><text class="tx" x="575" y="102" text-anchor="middle">Offset optimiser</text><text class="st" x="575" y="122" text-anchor="middle">once per cycle per node</text>
+          <rect class="bx" x="480" y="146" width="190" height="56" rx="6"/><text class="tx" x="575" y="170" text-anchor="middle">Cycle optimiser</text><text class="st" x="575" y="190" text-anchor="middle">every 5 min (2.5 rising)</text>
+          <rect class="bx" x="720" y="78" width="150" height="56" rx="6"/><text class="tx" x="795" y="102" text-anchor="middle">Signals</text><text class="st" x="795" y="122" text-anchor="middle">stage change times</text>
+          <path class="ln" d="M170 75 H216"/><path class="ln" d="M420 50 H476"/><path class="ln" d="M420 90 C450 90 450 106 476 106"/><path class="ln" d="M420 115 C455 115 450 174 476 174"/>
+          <path class="ln" d="M670 38 C700 38 700 96 716 100"/><path class="ln" d="M670 106 H716"/><path class="ln" d="M670 174 C700 174 700 118 716 114"/>
+          <path class="ln" d="M795 134 V250 H90 V114"/><text class="st" x="440" y="270" text-anchor="middle">vehicles respond to the new timings, the detector sees the result</text>
+        </svg>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="lpu" data-short="Detectors and LPUs">Detectors and link profile units</h2>
+      <p>SCOOT's detectors sit near the <em>upstream</em> end of each link, ideally just downstream of the previous junction. That position gives the model advance warning: vehicles are counted 10 to 20 seconds before they reach the stop line. Each detector is sampled four times a second and SCOOT converts the result into <strong>link profile units (LPUs)</strong>, a hybrid of flow and occupancy. Because a long vehicle occupies the loop longer, it produces more LPUs, just as it uses more green.</p>
+      <div class="formula">This lab's LPU:   LPU = 1 × vehicles + 2 × seconds the loop was occupied
+(TRL's internal coding is not published; any count-plus-occupancy hybrid behaves the same way.)</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>LPU calculator</h4><span class="hint">Why long vehicles count more</span></div>
+      <div class="bay-body bay-split">
+        <div class="controls">
+          <div class="ctl"><label for="lpLen">Vehicle length</label><output id="lpLeno"></output><input type="range" id="lpLen" min="3.5" max="18" step="0.5" value="4.8"></div>
+          <div class="ctl"><label for="lpSpd">Speed over the loop</label><output id="lpSpdo"></output><input type="range" id="lpSpd" min="2" max="20" step="0.5" value="13.5"></div>
+          <div class="ctl"><label for="lpLoop">Loop length</label><output id="lpLoopo"></output><input type="range" id="lpLoop" min="1" max="3" step="0.1" value="2"></div>
+        </div>
+        <div class="readout"><div><b id="lpOcc">–</b><span>seconds on the loop</span></div><div><b id="lpVal">–</b><span>LPUs this vehicle</span></div><div><b id="lpRel">–</b><span>car-equivalents (car at 13.5 m/s = 1)</span></div></div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="profile" data-short="Profiles and dispersion">From detector to stop line: profiles and dispersion</h2>
+      <p>Every second SCOOT adds the measured LPUs into a <strong>cyclic flow profile</strong>: a histogram of flow across one cycle, smoothed over several cycles so random fluctuations do not dominate. The profile is shifted by the <strong>cruise time</strong> (detector to stop line at cruising speed) and spread out, because platoons disperse as faster and slower drivers separate. SCOOT handles dispersion as TRANSYT does, with Robertson's model.</p>
+      <div class="formula">q_stop(t + βT) = F · q_det(t) + (1 − F) · q_stop(t + βT − 1)
+F = 1 / (1 + α β T)        α = 0.35, β = 0.8, T = cruise time</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Platoon dispersion</h4><span class="hint">A platoon released by the upstream signal, seen at the detector and at the stop line</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="dpCv" style="height:200px" aria-label="Detector profile and dispersed stop-line profile"></canvas>
+        <div class="legend"><span><i style="background:var(--phase-b);height:8px"></i>LPUs at the upstream detector</span><span><i style="background:var(--fg)"></i>predicted arrivals at the stop line</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="dpT">Cruise time T</label><output id="dpTo"></output><input type="range" id="dpT" min="3" max="45" value="18"></div>
+            <div class="ctl"><label for="dpG">Platoon length (upstream green)</label><output id="dpGo"></output><input type="range" id="dpG" min="5" max="40" value="20"></div>
+          </div>
+          <div class="readout"><div><b id="dpF">–</b><span>smoothing factor F</span></div><div><b id="dpLag">–</b><span>lag βT (s)</span></div><div><b id="dpPk">–</b><span>peak kept</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="queue" data-short="The queue model">The queue model and degree of saturation</h2>
+      <p>With arrivals predicted at the stop line, the queue follows from simple rules. Arrivals during red join the back of the queue. During <strong>effective green</strong> the queue discharges at the <strong>saturation occupancy (SATO)</strong>, in LPUs per second. Effective green starts a <em>start lag</em> after the signal turns green and ends an <em>end lag</em> after green ends. Once the queue has cleared, arrivals pass without stopping.</p>
+      <p>From the modelled queue SCOOT reads delay (the area under the queue), stops (arrivals that meet a queue or a red) and the <strong>degree of saturation</strong>: demand in the cycle, plus any queue left over, divided by what effective green could discharge. SCOOT aims to keep every stop line at or below about 90%.</p>
+      <div class="formula">DoS = (LPUs arriving per cycle + residual queue) / (effective green × SATO)
+PI  = delay + K × stops             (the performance index the optimisers minimise)</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>One cycle on one link</h4><span class="hint">Drag the green window and the platoon; watch the queue the model predicts</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="qmCv" style="height:230px" aria-label="Arrival profile, green window and modelled queue"></canvas>
+        <div class="legend"><span><i style="background:var(--phase-b);height:8px"></i>arrivals at stop line</span><span><i style="background:var(--phase-a);height:8px"></i>effective green</span><span><i style="background:var(--stop)"></i>modelled queue</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="qmG">Green starts at</label><output id="qmGo"></output><input type="range" id="qmG" min="0" max="59" value="20"></div>
+            <div class="ctl"><label for="qmL">Green length</label><output id="qmLo"></output><input type="range" id="qmL" min="8" max="45" value="26"></div>
+            <div class="ctl"><label for="qmP">Platoon arrives at</label><output id="qmPo"></output><input type="range" id="qmP" min="0" max="59" value="10"></div>
+            <div class="ctl"><label for="qmV">Flow (veh/h)</label><output id="qmVo"></output><input type="range" id="qmV" min="200" max="1400" step="50" value="700"></div>
+          </div>
+          <div class="readout"><div><b id="qmDos">–</b><span>degree of saturation</span></div><div><b id="qmDelay">–</b><span>delay (veh·s per cycle)</span></div><div><b id="qmStops">–</b><span>stops per cycle</span></div><div><b id="qmMax">–</b><span>max queue (veh)</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="validate" data-short="Validation">Validation: making the model match the street</h2>
+      <p>The model is only as good as its parameters. When a link is commissioned, an engineer stands at the stop line and <em>validates</em> it: they compare what SCOOT shows with what they see and set the <strong>journey (cruise) time</strong>, <strong>saturation occupancy</strong>, <strong>start lag</strong>, <strong>end lag</strong> and the <strong>maximum queue clear time</strong>. Poor validation is the most common reason SCOOT underperforms.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Validate this link</h4><span class="hint">The street queue clears at the time marked; tune the model until its queue clears at the same moment</span></div>
+      <div class="bay-body">
+        <canvas class="chart" id="vlCv" style="height:200px" aria-label="Observed and modelled queue during one green"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>observed queue (street)</span><span><i style="background:var(--stop)"></i>SCOOT model queue</span></div>
+        <div class="bay-split">
+          <div class="controls">
+            <div class="ctl"><label for="vlSat">Saturation occupancy (LPU/s)</label><output id="vlSato"></output><input type="range" id="vlSat" min="0.5" max="2.5" step="0.05" value="1.4"></div>
+            <div class="ctl"><label for="vlSl">Start lag (s)</label><output id="vlSlo"></output><input type="range" id="vlSl" min="0" max="8" step="1" value="1"></div>
+            <div><button class="btn ghost" type="button" id="vlNew">New street</button></div>
+          </div>
+          <div class="readout"><div><b id="vlObs">–</b><span>observed clear time (s)</span></div><div><b id="vlMod">–</b><span>model clear time (s)</span></div><div><b id="vlVerdict">–</b><span>validation</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="live" data-short="Live junction">SCOOT live, against fixed time and actuation</h2>
+      <p>One junction, three controllers, the same arrivals. The box far up each approach is the SCOOT detector; vehicles cross it, travel to the stop line and join the queue. The amber bar beside each queue is SCOOT's <em>model</em> of that queue; it never sees the real one. <strong>Fixed</strong> runs an 80 s plan. <strong>Actuated</strong> ends greens when the stop-line loop goes quiet. <strong>SCOOT</strong> runs the split optimiser before every stage change and the cycle optimiser every 5 simulated minutes.</p>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Live junction</h4>
+        <div class="seg" role="group" aria-label="Controller"><button type="button" data-mode="fixed">Fixed</button><button type="button" data-mode="actuated">Actuated</button><button type="button" data-mode="scoot" aria-pressed="true">SCOOT</button></div></div>
+      <div class="bay-body">
+        <div class="bay-split">
+          <canvas class="sim" id="liveCv" aria-label="Junction simulation"></canvas>
+          <div class="controls">
+            <div class="ctl"><label for="lvMain">Main road, per approach</label><output id="lvMaino"></output><input type="range" id="lvMain" min="100" max="900" step="25" value="600"></div>
+            <div class="ctl"><label for="lvSide">Side road, per approach</label><output id="lvSideo"></output><input type="range" id="lvSide" min="50" max="600" step="25" value="300"></div>
+            <div class="ctl"><label for="lvSpd">Simulation speed</label><output id="lvSpdo"></output><input type="range" id="lvSpd" min="1" max="30" value="5"></div>
+            <div class="readout">
+              <div><b id="lvC">–</b><span>cycle (s)</span></div><div><b id="lvDs">–</b><span>modelled DoS A / B</span></div>
+              <div><b id="lvD">–</b><span>mean delay (s)</span></div><div><b id="lvErr">–</b><span>model queue error (veh)</span></div>
+            </div>
+            <p class="muted" id="lvLast" style="margin:0;font-size:.9rem">Split decisions appear here.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" type="button" id="lvPause">Pause</button><button class="btn ghost" type="button" id="lvReset">Reset</button></div>
+          </div>
+        </div>
+        <canvas class="chart" id="lvChart" aria-label="Cycle length and modelled DoS over recent cycles"></canvas>
+        <div class="legend"><span><i style="background:var(--fg)"></i>cycle length ÷ 100</span><span><i style="background:var(--go)"></i>DoS stage A</span><span><i style="background:var(--phase-b)"></i>DoS stage B</span><span><i style="background:var(--amber)"></i>90% target</span></div>
+      </div>
+    </div>
+    <div class="bay">
+      <div class="bay-head"><h4>Race the controllers</h4><span class="hint">One simulated hour each, identical random arrivals, peak in the middle</span></div>
+      <div class="bay-body">
+        <div><button class="btn" type="button" id="raceBtn">Run the race</button></div>
+        <p class="muted" style="margin:0;font-size:.92rem">At a single isolated junction, good vehicle actuation is hard to beat: it reacts to each gap. SCOOT's strength is coordinating many junctions through offsets and a common cycle, which the Advanced level shows on a four-junction region.</p>
+        <div class="table-scroll"><table class="data" id="raceT"><thead><tr><th>Controller</th><th>Mean delay (s/veh)</th><th>Mean queue (veh)</th><th>Vehicles served</th><th>Final cycle (s)</th></tr></thead><tbody><tr><td colspan="5" class="muted">Press "Run the race".</td></tr></tbody></table></div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="webster" data-short="Webster">Where fixed-time plans come from</h2>
+      <p>Before SCOOT, coordinated networks ran fixed plans designed offline, usually with TRANSYT, which uses the same cyclic-profile and dispersion model. SCOOT is often described as an on-line version of TRANSYT. For an isolated junction the classic fixed-cycle design is Webster's formula.</p>
+      <div class="formula">C0 = (1.5·L + 5) / (1 − Y)      L = total lost time,  Y = Σ critical flow ratios (q/s)</div>
+    </section>
+    <div class="bay">
+      <div class="bay-head"><h4>Webster calculator</h4></div>
+      <div class="bay-body bay-split">
+        <div class="controls">
+          <div class="ctl"><label for="wL">Lost time L (s)</label><output id="wLo"></output><input type="range" id="wL" min="4" max="20" value="10"></div>
+          <div class="ctl"><label for="wA">Main road flow ratio y_A</label><output id="wAo"></output><input type="range" id="wA" min="0.05" max="0.6" step="0.01" value="0.35"></div>
+          <div class="ctl"><label for="wB">Side road flow ratio y_B</label><output id="wBo"></output><input type="range" id="wB" min="0.05" max="0.5" step="0.01" value="0.2"></div>
+        </div>
+        <div class="readout"><div><b id="wC">–</b><span>optimum cycle C0 (s)</span></div><div><b id="wY">–</b><span>Y</span></div><div><b id="wS">–</b><span>green split A / B (s)</span></div></div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2 id="sumo" data-short="Run it in SUMO">Run it in SUMO</h2>
+      <p>The same model runs inside Eclipse SUMO with real lane changing, mixed vehicles and stochastic drivers. See the <a href="sumo.html">SUMO code page</a> for installation.</p>
+      <div class="runit"><h4>Lab F1: LPUs, profiles and the queue model against SUMO</h4>
+        <pre><code>python foundation/01_lpu_profiles_queue.py --link W_J1</code></pre>
+        <p>Logs, every second, the LPUs at the upstream detector, the predicted stop-line arrivals, SCOOT's model queue and the queue SUMO actually built.</p>
+        <figure><img src="assets/results/foundation_model_vs_sumo.png" alt="Upstream LPUs, dispersed arrivals, and SCOOT model queue against SUMO halted vehicles over four minutes" loading="lazy"><figcaption>Four peak minutes on the main-road approach. The model queue (red) follows SUMO's real queue (black) in timing and size without ever seeing it. It empties a few seconds later because SUMO stops counting a vehicle as queued as soon as it starts moving.</figcaption></figure>
+      </div>
+      <div class="runit"><h4>Lab F2: validate the model</h4>
+        <pre><code>python foundation/02_validate_model.py</code></pre>
+        <p>Overloads the junction and measures what an engineer validates on site. Our run gives <strong>1.95 LPU per vehicle</strong>, cruise speed <strong>13.5 m/s</strong>, SATO <strong>0.67 LPU/s per lane</strong> on the main road and <strong>0.89</strong> on the side road, start lag <strong>3 s</strong> and end lag <strong>4 s</strong>. These are the controller's defaults.</p>
+      </div>
+      <div class="runit"><h4>Lab F3: fixed vs actuated vs SCOOT</h4>
+        <pre><code>python foundation/03_fixed_vs_scoot.py          # add --gui to watch SCOOT in sumo-gui</code></pre>
+        <div id="fTable" class="table-scroll"></div>
+        <figure><img src="assets/results/foundation_node_timeline.png" alt="SCOOT cycle, stage greens and modelled DoS over one hour at a single junction" loading="lazy"><figcaption>The cycle optimiser shortens the cycle in light traffic, then holds it while DoS rises in the peak.</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="prose">
+      <h2 id="quiz" data-short="Quiz">Check your understanding</h2>
+      <div class="quiz" id="quizF"></div>
+      <p>Ready? Continue to <a href="advanced.html">Advanced</a>, where the three optimisers coordinate a whole region.</p>
+    </section>
+  </main>
+</div>
+<script src="js/engine.js"></script>
+<script src="js/intersection-sim.js"></script>
+<script src="js/quizdata.js"></script>
+<script src="js/results.js"></script>
+<script src="js/common.js"></script>
+<script src="js/foundation.js"></script>
+</body>
+</html>
