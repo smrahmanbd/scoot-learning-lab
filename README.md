@@ -12,11 +12,13 @@ for **Eclipse SUMO**.
 | **2 Advanced** | split optimiser (temporary / permanent), offset optimiser and PI, cycle optimiser and critical node, double cycling, congestion importance, gating, bus extensions and recalls, ASTRID, INGRID, versions | split explorer, offset PI curve, cycle optimiser through a peak, gating, priority planner | `01_corridor_scoot`, `02_ablation_study` |
 | **3 Mastery** | research directions with implementations | CV sampling, split agent you train in the browser, pressure-aware split rule, detector faults, stop weight | `01_cv_lpu`, `02_rl_split_optimiser`, `03_maxpressure`, `04_loop_faults_astrid`, `05_emissions_stop_weight`, `06_glosa_prediction` |
 
-Plus a **42-question quiz bank** with explanations and an explorable **mind map**.
+Plus a **42-question quiz bank** with explanations and an interactive **mind map** of the main SCOOT ideas (icons, animations, memory pictures and a quiz mode).
 
 ## Study guides and slides
 
 Beginner-friendly study guides (plain-language explanations, worked hand calculations, a memory route, mind maps, an 18-question self-quiz with answers, a cheat sheet and a revision plan) and a matching slide deck with speaker notes for each level:
+
+The Foundation slides open with a **group investigation**: six questions, one per group, each with an animated GIF that plays in PowerPoint, and an answer slide for each group in the *Group answers* part of the deck.
 
 | Level | Study guide | Slides |
 |---|---|---|
