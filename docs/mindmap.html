@@ -4,104 +4,340 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SCOOT Mind Map</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="css/site.css">
 <style>
-  .lvF { --lv: var(--go); } .lvA { --lv: #2c6fb7; } .lvM { --lv: #8a4fb0; }
-  .outline details { margin-left: 14px; } .outline summary { cursor: pointer; font-weight: 600; }
-  .outline li { list-style: none; }
-  .chip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--lv); margin-right: 6px; vertical-align: middle; }
+  .hand { font-family: "Caveat", "Comic Sans MS", cursive; }
+  .mono { font-family: var(--mono); }
+  .mmx { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 18px; margin-top: 1.2rem; align-items: start; }
+  @media (max-width: 980px) { .mmx { grid-template-columns: 1fr; } }
+  .mm-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .mm-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .mm-bar input { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--fg); flex: 1 1 160px; min-width: 0; }
+  .mm-bar .btn { white-space: nowrap; }
+  .btn.quiz { background: #d99a00; color: #1a1a1a; border-color: #d99a00; font-weight: 600; }
+  #map { display: block; width: 100%; height: auto; touch-action: manipulation; }
+  #map .br { cursor: pointer; transition: opacity .25s; }
+  #map .br .disc { transition: transform .2s; transform-box: fill-box; transform-origin: center; }
+  #map .br:hover .disc, #map .br:focus-visible .disc { transform: scale(1.08); }
+  #map .br:focus { outline: none; }
+  #map .br:focus-visible .ring { stroke: var(--amber); stroke-width: 5; }
+  #map.focus .br:not(.on) { opacity: .35; }
+  #map.focus .spoke:not(.on) { opacity: .25; }
+  #map .lbl { font-family: var(--display); font-weight: 700; font-size: 29px; fill: var(--fg); paint-order: stroke; stroke: var(--surface); stroke-width: 7px; stroke-linejoin: round; }
+  #map .num { font-family: var(--display); font-weight: 800; font-size: 19px; }
+  #map .hubt { font-family: var(--display); font-weight: 800; font-size: 54px; letter-spacing: 1px; }
+  #map .hubs { font-family: "Caveat", cursive; font-size: 25px; font-weight: 700; }
+  #map .leaf { cursor: pointer; opacity: 0; transition: opacity .3s, transform .35s; }
+  #map .leaf.show { opacity: 1; }
+  #map .leaf rect { fill: var(--surface); stroke-width: 2.5; }
+  #map .leaf text { font-family: var(--body); font-size: 21px; font-weight: 600; fill: var(--fg); }
+  #map .leaf.hit rect { fill: #ffe9a8; } #map .leaf.hit text { fill: #1a1a1a; }
+  #map .br.hit .ring { stroke: #d99a00; stroke-width: 6; }
+  #map .br.wrong .ring { stroke: var(--stop); stroke-width: 6; }
+  #map .br.right .ring { stroke: var(--go); stroke-width: 7; }
+  .grid8 { display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px; }
+  .grid8 button { display: flex; align-items: center; gap: 10px; text-align: left; font: 600 1.05rem/1.15 var(--display); color: var(--fg); background: var(--paper); border: 2px solid transparent; border-radius: 12px; padding: 8px 10px; cursor: pointer; }
+  .grid8 button i { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; }
+  .grid8 button.on { border-color: var(--c); background: var(--surface); }
+  @media (max-width: 640px) { #map { display: none; } .grid8 { display: grid; } }
+  .panel { padding: 0; overflow: hidden; position: sticky; top: 12px; }
+  @media (max-width: 980px) { .panel { position: static; } }
+  .ph { background: var(--c, var(--band)); color: #fff; padding: 16px 18px 14px; display: flex; gap: 14px; align-items: center; }
+  .ph .ic { flex: none; width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; }
+  .ph small { display: block; font: 600 .78rem/1 var(--body); letter-spacing: .14em; text-transform: uppercase; opacity: .85; margin-bottom: 4px; }
+  .ph h2 { font: 800 2rem/1 var(--display); color: #fff; margin: 0; }
+  .pb { padding: 14px 18px 18px; display: grid; gap: 12px; }
+  .qbox { border-left: 5px solid var(--c); background: var(--sunk); border-radius: 0 10px 10px 0; padding: 9px 12px; }
+  .qbox b { display: block; font: 700 .74rem/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .qbox span { font: italic 500 1.05rem/1.35 var(--body); }
+  .keyn { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .keyn .v { font: 700 1.7rem/1 var(--mono); color: var(--c); }
+  :root[data-theme="dark"] .keyn .v { filter: brightness(1.9); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .keyn .v { filter: brightness(1.9); } }
+  .keyn .l { color: var(--muted); font-size: .95rem; }
+  .gifbox { border-radius: 10px; overflow: hidden; background: #F5F3EE; border: 1px solid var(--line); }
+  .gifbox img { display: block; width: 100%; aspect-ratio: 1040 / 375; object-fit: contain; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tabs button { font: 600 .85rem var(--body); border: 1px solid var(--line); background: var(--paper); color: var(--fg); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+  .tabs button[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; }
+  .sticky { background: #fff3b8; color: #3b2f00; border-radius: 4px 14px 4px 14px; padding: 10px 14px 12px; transform: rotate(-.6deg); box-shadow: 0 2px 0 rgba(0,0,0,.08); }
+  .sticky b { font: 700 .72rem/1 var(--body); letter-spacing: .14em; text-transform: uppercase; display: block; margin-bottom: 3px; color: #7a5b00; }
+  .sticky span { font-size: 1.45rem; line-height: 1.15; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chips button { font: 500 .92rem var(--body); border: 2px solid var(--c); background: var(--surface); color: var(--fg); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--c); color: #fff; }
+  .leafd { background: var(--sunk); border-radius: 10px; padding: 10px 12px; min-height: 3em; }
+  .leafd strong { font-family: var(--display); font-size: 1.2rem; }
+  .golink { font-weight: 600; }
+  .quizc { text-align: center; padding: 8px 4px; }
+  .quizc .def { font: 500 1.15rem/1.4 var(--body); background: var(--sunk); border-radius: 12px; padding: 14px; margin: 8px 0 10px; }
+  .quizc .fb { font: 700 1.2rem var(--display); min-height: 1.6em; }
+  .quizc .score { font: 700 1rem var(--mono); color: var(--muted); }
+  .outline details { border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 10px; padding: 8px 12px; margin: 8px 0; background: var(--surface); }
+  .outline summary { cursor: pointer; font: 700 1.25rem var(--display); }
+  .outline li { margin: .2rem 0; }
+  .howto { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: .95rem; margin-top: 8px; }
+  .howto span::before { content: "●"; color: var(--amber); margin-right: 6px; }
 </style>
 </head>
 <body>
 <main class="wrap">
   <header class="level-head prose">
     <h1>The SCOOT mind map</h1>
-    <p class="lede">Every concept in the lab on one map. Click a node to open or close its branch and read its definition; drag to pan and scroll to zoom. Colour shows the level where it is taught.</p>
-    <div class="legend" style="margin-top:10px"><span class="lvF"><span class="chip"></span>Foundation</span><span class="lvA"><span class="chip"></span>Advanced</span><span class="lvM"><span class="chip"></span>Mastery</span></div>
+    <p class="lede">Seven big ideas make SCOOT work, plus one branch for going further. Click an idea to open its branch: you get the class question it answers, the idea in plain words, a key number, a memory picture and an animation.</p>
+    <div class="howto"><span>Click an idea, then a leaf</span><span>Press <b>Quiz me</b> to test yourself</span><span>The numbers follow the lecture order</span></div>
   </header>
-  <div class="mm-wrap">
-    <div class="mm-tools">
-      <label for="mmSearch" class="muted">Find</label><input id="mmSearch" type="search" placeholder="e.g. offset, LPU, gating">
-      <button class="btn ghost" type="button" id="mmExpand">Expand all</button>
-      <button class="btn ghost" type="button" id="mmCollapse">Collapse</button>
-      <button class="btn ghost" type="button" id="mmFit">Fit to view</button>
+
+  <div class="mmx">
+    <div class="mm-card">
+      <div class="mm-bar">
+        <input id="find" type="search" placeholder="Find: LPU, offset, SATO…" aria-label="Find a concept">
+        <button class="btn ghost" type="button" id="btnHub">Overview</button>
+        <button class="btn quiz" type="button" id="btnQuiz">Quiz me</button>
+      </div>
+      <svg id="map" viewBox="0 0 1200 840" role="group" aria-label="Mind map of the main SCOOT ideas"></svg>
+      <div class="grid8" id="grid8" role="group" aria-label="SCOOT ideas"></div>
     </div>
-    <svg id="mm" role="img" aria-label="Interactive mind map of SCOOT concepts"></svg>
-    <div class="mm-detail" id="mmDetail" aria-live="polite"><strong>SCOOT</strong> <span class="muted">Click any node to see its definition here.</span></div>
+    <aside class="mm-card panel" id="panel" aria-live="polite"></aside>
   </div>
+
   <section class="prose">
-    <h2 id="outline">Outline view</h2>
-    <p class="muted">The same map as an expandable list, handy on a phone or for revision.</p>
+    <h2 id="outline">All ideas as a list</h2>
+    <p class="muted">Handy on a phone or for revision.</p>
     <div class="outline" id="outlineList"></div>
   </section>
 </main>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script>window.d3 || document.write('<script src="js/d3.v7.8.5.min.js"><\/script>')</script>
 <script src="js/mindmap-data.js"></script>
 <script src="js/common.js"></script>
 <script>
 (function () {
-  const COLORS = { F: () => tok('--go'), A: () => '#2c6fb7', M: () => '#8a4fb0' };
-  const LV = { F: 'Foundation', A: 'Advanced', M: 'Mastery' };
-  const svg = d3.select('#mm'), g = svg.append('g');
-  const zoom = d3.zoom().scaleExtent([0.3, 2.5]).on('zoom', e => g.attr('transform', e.transform));
-  svg.call(zoom);
-  const root = d3.hierarchy(MINDMAP); root.x0 = 0; root.y0 = 0;
-  root.descendants().forEach((d, i) => { d.id = i; d._children = d.children; if (d.depth >= 1) d.children = null; });
-  const tree = d3.tree().nodeSize([30, 220]);
-  let query = '';
+  const M = window.MINDMAP, B = M.branches;
+  const NS = 'http://www.w3.org/2000/svg';
+  const ICON = {
+    sliders: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/>',
+    radar: '<rect x="8" y="13" width="8" height="6" rx="1"/><path d="M12 13V9"/><path d="M8.5 7.5a5 5 0 0 1 7 0M6 5a8.5 8.5 0 0 1 12 0"/>',
+    people: '<circle cx="6" cy="7" r="2"/><circle cx="12.5" cy="9" r="2"/><circle cx="19" cy="12" r="2"/><path d="M6 10v5M12.5 12v5M19 15v4M3 20h18"/>',
+    bath: '<path d="M3 12h18v2a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5z"/><path d="M6 12V6a2 2 0 0 1 4 0"/><path d="M7 19l-1 2M17 19l1 2"/>',
+    dials: '<circle cx="12" cy="13" r="7"/><path d="M12 13l3.5-3.5"/><path d="M9 3h6M12 3v3"/>',
+    stopwatch: '<circle cx="12" cy="14" r="7"/><path d="M12 14V10M10 2h4M12 2v5M18 7l1.5-1.5"/>',
+    trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M9.5 17h5"/>',
+    compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+    hub: '<rect x="9" y="3" width="6" height="16" rx="2"/><circle cx="12" cy="7" r="1.4"/><circle cx="12" cy="11" r="1.4"/><circle cx="12" cy="15" r="1.4"/><path d="M12 19v3"/>',
+  };
+  const svgIcon = (k, size, col) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 
-  function update(src) {
-    tree(root);
-    const nodes = root.descendants(), links = root.links();
-    const node = g.selectAll('g.node').data(nodes, d => d.id);
-    const enter = node.enter().append('g').attr('class', 'node').attr('transform', `translate(${src.y0},${src.x0})`).style('cursor', 'pointer')
-      .attr('tabindex', 0).attr('role', 'button')
-      .on('click', (e, d) => toggle(d)).on('keydown', (e, d) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(d); } });
-    enter.append('circle').attr('r', 7).attr('stroke-width', 2);
-    enter.append('text').attr('dy', '0.32em').attr('x', 12).style('font-size', d => d.depth === 0 ? '18px' : '14px').style('font-weight', d => d.depth <= 1 ? 600 : 400).text(d => d.data.name);
-    const all = enter.merge(node);
-    all.transition().duration(250).attr('transform', d => `translate(${d.y},${d.x})`);
-    all.select('circle').attr('fill', d => d._children && !d.children ? COLORS[d.data.lv]() : tok('--surface')).attr('stroke', d => COLORS[d.data.lv]());
-    all.select('text').style('fill', d => query && d.data.name.toLowerCase().includes(query) ? tok('--stop') : tok('--fg'))
-      .attr('paint-order', 'stroke').attr('stroke', tok('--surface')).attr('stroke-width', 4);
-    node.exit().transition().duration(200).attr('transform', `translate(${src.y},${src.x})`).remove();
-    const link = g.selectAll('path.link').data(links, d => d.target.id);
-    link.enter().insert('path', 'g').attr('class', 'link').attr('fill', 'none').attr('stroke-width', 1.5)
-      .attr('d', () => { const o = { x: src.x0, y: src.y0 }; return diag(o, o); })
-      .merge(link).attr('stroke', tok('--line')).transition().duration(250).attr('d', d => diag(d.source, d.target));
-    link.exit().remove();
-    nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
-  }
-  const diag = (s, t) => `M${s.y},${s.x}C${(s.y + t.y) / 2},${s.x} ${(s.y + t.y) / 2},${t.x} ${t.y},${t.x}`;
-  function toggle(d) {
-    if (d.children) d.children = null; else d.children = d._children;
-    document.getElementById('mmDetail').innerHTML = `<strong>${d.data.name}</strong> <span class="muted">· ${LV[d.data.lv]}</span><br>${d.data.d}`;
-    update(d);
-  }
-  function fit() {
-    const b = g.node().getBBox(), w = svg.node().clientWidth, h = svg.node().clientHeight;
-    const s = Math.min(1.4, 0.9 / Math.max(b.width / w, b.height / h));
-    svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(w / 2 - s * (b.x + b.width / 2), h / 2 - s * (b.y + b.height / 2)).scale(s));
-  }
-  document.getElementById('mmExpand').onclick = () => { root.descendants().forEach(d => d.children = d._children); update(root); setTimeout(fit, 280); };
-  document.getElementById('mmCollapse').onclick = () => { root.descendants().forEach(d => { if (d.depth >= 1) d.children = null; }); root.children = root._children; update(root); setTimeout(fit, 280); };
-  document.getElementById('mmFit').onclick = fit;
-  document.getElementById('mmSearch').addEventListener('input', e => {
-    query = e.target.value.trim().toLowerCase();
-    if (query) root.descendants().forEach(d => { if (d._children && d.descendants().some(x => x.data.name.toLowerCase().includes(query) || (x._children || []).some(c => c.data.name.toLowerCase().includes(query)))) d.children = d._children; });
-    update(root);
+  // ---------- layout
+  const CX = 600, CY = 420, RX = 300, RY = 200, VW = 1200, VH = 840;
+  B.forEach((b, i) => {
+    const a = (-90 + i * 45) * Math.PI / 180;
+    b.x = CX + RX * Math.cos(a); b.y = CY + RY * Math.sin(a);
+    const dx = b.x - CX, dy = b.y - CY, L = Math.hypot(dx, dy); b.ux = dx / L; b.uy = dy / L;
   });
-  root.children = root._children; update(root); setTimeout(fit, 50);
-  addEventListener('themechange', () => update(root));
 
-  // outline
-  const out = n => n.children ? `<details${n === MINDMAP ? ' open' : ''}><summary class="lv${n.lv}"><span class="chip"></span>${n.name}</summary><p class="muted" style="margin:.2rem 0 .4rem 16px">${n.d}</p>${n.children.map(out).join('')}</details>`
-    : `<li class="lv${n.lv}" style="margin-left:14px"><span class="chip"></span><strong>${n.name}</strong>: ${n.d}</li>`;
-  document.getElementById('outlineList').innerHTML = out(MINDMAP);
+  const svg = document.getElementById('map');
+  const gSpokes = el('g', {}, svg), gLeaves = el('g', {}, svg), gNodes = el('g', {}, svg);
+
+  // learning-order ring
+  el('ellipse', { cx: CX, cy: CY, rx: RX, ry: RY, fill: 'none', stroke: 'var(--line)', 'stroke-width': 3, 'stroke-dasharray': '4 12', 'stroke-linecap': 'round' }, gSpokes);
+  B.forEach(b => {
+    const mx = (CX + b.x) / 2 + b.uy * 30, my = (CY + b.y) / 2 - b.ux * 30;
+    b.spoke = el('path', { class: 'spoke', d: `M${CX},${CY} Q${mx},${my} ${b.x},${b.y}`, fill: 'none', stroke: b.color, 'stroke-width': 6, 'stroke-linecap': 'round', opacity: .8 }, gSpokes);
+  });
+
+  // hub
+  const hub = el('g', { class: 'br', tabindex: 0, role: 'button', 'aria-label': 'SCOOT overview' }, gNodes);
+  el('circle', { class: 'disc', cx: CX, cy: CY, r: 98, fill: 'var(--band)' }, hub);
+  el('circle', { class: 'ring', cx: CX, cy: CY, r: 106, fill: 'none', stroke: 'var(--band)', 'stroke-width': 3, 'stroke-dasharray': '6 8' }, hub);
+  const ht = el('text', { class: 'hubt', x: CX, y: CY + 8, 'text-anchor': 'middle', fill: '#fff' }, hub); ht.textContent = 'SCOOT';
+  const hs = el('text', { class: 'hubs', x: CX, y: CY + 44, 'text-anchor': 'middle', fill: '#ffd56b' }, hub); hs.textContent = M.tag;
+  [['#d23b2f', -34], ['#d99a00', 0], ['#1f9d55', 34]].forEach(([c, dx]) => el('circle', { cx: CX + dx, cy: CY - 52, r: 9, fill: c }, hub));
+  hub.addEventListener('click', () => showHub());
+  hub.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showHub(); } });
+
+  // branches
+  B.forEach((b, i) => {
+    const g = el('g', { class: 'br', tabindex: 0, role: 'button', 'aria-label': `${i + 1}. ${b.name}` }, gNodes);
+    el('circle', { class: 'ring', cx: b.x, cy: b.y, r: 58, fill: 'var(--surface)', stroke: b.color, 'stroke-width': 3 }, g);
+    const disc = el('g', { class: 'disc' }, g);
+    el('circle', { cx: b.x, cy: b.y, r: 48, fill: b.color }, disc);
+    const ic = el('g', { transform: `translate(${b.x - 26},${b.y - 26}) scale(2.17)`, fill: 'none', stroke: '#fff', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, disc);
+    ic.innerHTML = ICON[b.icon];
+        el('circle', { cx: b.x + 40, cy: b.y - 40, r: 17, fill: '#d99a00', stroke: 'var(--surface)', 'stroke-width': 3 }, g);
+    const nt = el('text', { class: 'num', x: b.x + 40, y: b.y - 33, 'text-anchor': 'middle', fill: '#1a1a1a' }, g); nt.textContent = i + 1;
+    // label on the outward side; side branches get a two-line label beside the node
+    const side = Math.abs(b.ux) > 0.9;
+    const lines = side ? b.name.replace(' & ', ' &|').replace(' vs ', ' vs|').split('|') : [b.name];
+    let lx = b.x, ly = b.uy < 0 ? b.y - 72 : b.y + 94, anc = 'middle';
+    if (side) { lx = b.x + b.ux * 70; ly = b.y - 6; anc = b.ux > 0 ? 'start' : 'end'; }
+    const lt = el('text', { class: 'lbl', x: lx, y: ly, 'text-anchor': anc }, g);
+    lines.forEach((ln, k) => { const ts = el('tspan', { x: lx, dy: k ? 30 : 0 }, lt); ts.textContent = ln; });
+    b.g = g;
+    const go = () => (quiz ? answerQuiz(b) : showBranch(b));
+    g.addEventListener('click', go);
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+
+  // leaves (drawn when a branch opens)
+  function drawLeaves(b, hitName) {
+    gLeaves.innerHTML = '';
+    const n = b.leaves.length, side = Math.abs(b.ux) > 0.9;
+    const span = side ? 120 : (n > 4 ? 140 : 110), R0 = side ? 150 : 175;
+    const base = Math.atan2(b.uy, b.ux) * 180 / Math.PI;
+    const boxes = [];
+    b.leaves.forEach((lf, k) => {
+      let angD = base - span / 2 + (n === 1 ? span / 2 : span * k / (n - 1));
+      if (side) { const up = Math.ceil(n / 2), m = k < up ? k : k - up, cnt = k < up ? up : n - up; const off = 38 + (cnt === 1 ? 20 : 44 * m / (cnt - 1)); angD = base + (k < up ? -1 : 1) * (b.ux > 0 ? off : off) * 1; }
+      const ang = angD * Math.PI / 180;
+      const R = R0 + (side ? 30 : (k % 2) * 48);
+      const lx = b.x + R * Math.cos(ang), ly = b.y + R * 0.9 * Math.sin(ang) + (b.uy > 0.5 ? 60 : b.uy < -0.5 ? -45 : 0);
+      const g = el('g', { class: 'leaf' + (hitName === lf.name ? ' hit' : ''), tabindex: 0, role: 'button', 'aria-label': lf.name }, gLeaves);
+      const path = el('path', { stroke: b.color, 'stroke-width': 2.5, 'stroke-dasharray': '2 6', 'stroke-linecap': 'round', fill: 'none' }, g);
+      const t = el('text', { x: 0, y: 0 }, g); t.textContent = lf.name;
+      const w = t.getComputedTextLength() + 30, h = 40, c = Math.cos(ang);
+      let rx = c > 0.35 ? lx : c < -0.35 ? lx - w : lx - w / 2, ry = ly - h / 2;
+      boxes.push({ g, t, path, ang, w, h, rx, ry });
+    });
+    // top/bottom branches: one row beyond the label; side branches: columns above and below the label
+    if (Math.abs(b.ux) < 0.2) {
+      const gap = 14, tot = boxes.reduce((a, o) => a + o.w, 0) + gap * (boxes.length - 1);
+      let x0 = b.x - tot / 2; const y0 = b.uy < 0 ? b.y - 150 : b.y + 128;
+      boxes.forEach(o => { o.rx = x0; o.ry = y0; x0 += o.w + gap; o.ang = Math.atan2(o.ry + o.h / 2 - b.y, o.rx + o.w / 2 - b.x); });
+    } else if (side) {
+      const up = Math.ceil(n / 2);
+      boxes.forEach((o, k) => {
+        const m = k < up ? k : k - up;
+        const mm = k < up ? up - 1 - m : m;
+        o.ry = k < up ? b.y - 98 - mm * 48 : b.y + 58 + mm * 48;
+        o.rx = b.ux > 0 ? b.x + 60 + mm * 18 : b.x - 60 - mm * 18 - o.w;
+        o.ang = Math.atan2(o.ry + o.h / 2 - b.y, (b.ux > 0 ? o.rx : o.rx + o.w) - b.x);
+      });
+    }
+    // push overlapping pills apart (outward from the branch)
+    for (let it = 0; it < (Math.abs(b.ux) < 0.2 || side ? 0 : 40); it++) {
+      let moved = false;
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        const A = boxes[i], Bx = boxes[j];
+        const ox = Math.min(A.rx + A.w, Bx.rx + Bx.w) - Math.max(A.rx, Bx.rx) + 8, oy = Math.min(A.ry + A.h, Bx.ry + Bx.h) - Math.max(A.ry, Bx.ry) + 6;
+        if (ox > 0 && oy > 0) { moved = true; if (Math.abs(b.uy) > 0.5) { const d = oy / 2 * Math.sign(b.uy || 1); Bx.ry += d; A.ry -= d * 0; Bx.ry += 0; } else { Bx.ry += oy / 2; A.ry -= oy / 2; } }
+      }
+      if (!moved) break;
+    }
+    boxes.forEach((o, k) => {
+      o.rx = Math.max(6, Math.min(VW - 6 - o.w, o.rx)); o.ry = Math.max(6, Math.min(VH - 6 - o.h, o.ry));
+      const r = el('rect', { x: o.rx, y: o.ry, width: o.w, height: o.h, rx: 20, stroke: b.color }, o.g); o.g.insertBefore(r, o.t);
+      o.t.setAttribute('x', o.rx + 15); o.t.setAttribute('y', o.ry + 27);
+      const ex = Math.max(o.rx, Math.min(o.rx + o.w, b.x)), ey = Math.max(o.ry, Math.min(o.ry + o.h, b.y));
+      o.path.setAttribute('d', `M${b.x + 60 * Math.cos(o.ang)},${b.y + 60 * Math.sin(o.ang)} L${ex},${ey}`);
+      const lf = b.leaves[k], pick = () => selectLeaf(b, lf);
+      o.g.addEventListener('click', pick);
+      o.g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      requestAnimationFrame(() => setTimeout(() => o.g.classList.add('show'), 30 + k * 60));
+    });
+  }
+
+  // phone grid
+  const grid = document.getElementById('grid8');
+  B.forEach((b, i) => {
+    const bt = document.createElement('button'); bt.type = 'button'; bt.style.setProperty('--c', b.color);
+    bt.innerHTML = `<i style="background:${b.color}">${svgIcon(b.icon, 24, '#fff')}</i><span>${i + 1}. ${b.name}</span>`;
+    bt.addEventListener('click', () => (quiz ? answerQuiz(b) : showBranch(b)));
+    b.btn = bt; grid.appendChild(bt);
+  });
+
+  // ---------- panel
+  const panel = document.getElementById('panel');
+  let current = null;
+  function mark(b) {
+    svg.classList.toggle('focus', !!b);
+    B.forEach(x => { x.g.classList.toggle('on', x === b); x.spoke.classList.toggle('on', x === b); x.btn.classList.toggle('on', x === b); });
+  }
+  function showHub() {
+    current = null; mark(null); gLeaves.innerHTML = ''; quiz = null;
+    panel.style.setProperty('--c', 'var(--band)');
+    panel.innerHTML = `<div class="ph"><span class="ic">${svgIcon('hub', 32, '#fff')}</span><div><small>The big picture</small><h2>SCOOT in one breath</h2></div></div>
+      <div class="pb"><p style="margin:0">${M.d}</p>
+      <div class="sticky"><b>The SCOOT loop</b><span class="hand">count far upstream → predict arrivals → model the queue → nudge split, cycle and offset → repeat, every few seconds</span></div>
+      <p class="muted" style="margin:0">Ideas 1–6 match the six group questions in the Foundation slides. Idea 7 explains who makes the nudges, and 8 points to the Advanced and Mastery levels.</p>
+      <div class="chips">${B.map((b, i) => `<button type="button" style="--c:${b.color}" data-b="${i}">${i + 1}. ${b.name}</button>`).join('')}</div></div>`;
+    panel.querySelectorAll('[data-b]').forEach(x => x.addEventListener('click', () => showBranch(B[+x.dataset.b])));
+  }
+  function showBranch(b, leafName) {
+    current = b; mark(b); drawLeaves(b, leafName);
+    const i = B.indexOf(b);
+    panel.style.setProperty('--c', b.color);
+    const gifs = b.gifs.length ? `<div><div class="tabs" role="group" aria-label="Animations">${b.gifs.map((g, k) => `<button type="button" data-g="${k}" aria-pressed="${k === 0}">${g[1]}</button>`).join('')}</div>
+      <div class="gifbox" style="margin-top:8px"><img id="gifImg" src="animations/${b.gifs[0][0]}" alt="Animation: ${b.gifs[0][1]}" loading="lazy"></div></div>` : '';
+    panel.innerHTML = `<div class="ph"><span class="ic">${svgIcon(b.icon, 32, '#fff')}</span><div><small>Idea ${i + 1} of ${B.length}</small><h2>${b.name}</h2></div></div>
+      <div class="pb">
+        <div class="qbox"><b>${b.group ? 'Class question · Group ' + b.group : 'Big question'}</b><span>${b.q}</span></div>
+        <p style="margin:0">${b.plain}</p>
+        <div class="keyn"><span class="v">${b.key[0]}</span><span class="l">${b.key[1]}</span></div>
+        ${gifs}
+        <div class="sticky"><b>Picture this</b><span class="hand">${b.picture}</span></div>
+        <div><div class="chips">${b.leaves.map((l, k) => `<button type="button" data-l="${k}" aria-pressed="false">${l.name}</button>`).join('')}</div></div>
+        <div class="leafd" id="leafd"><span class="muted">Click a leaf on the map or above to read it.</span></div>
+        <a class="golink" href="${b.link}">Open it in the lab →</a>
+      </div>`;
+    panel.querySelectorAll('[data-g]').forEach(bt => bt.addEventListener('click', () => {
+      panel.querySelectorAll('[data-g]').forEach(z => z.setAttribute('aria-pressed', z === bt));
+      const g = b.gifs[+bt.dataset.g], im = document.getElementById('gifImg'); im.src = 'animations/' + g[0]; im.alt = 'Animation: ' + g[1];
+    }));
+    panel.querySelectorAll('[data-l]').forEach(bt => bt.addEventListener('click', () => selectLeaf(b, b.leaves[+bt.dataset.l])));
+    if (leafName) { const lf = b.leaves.find(l => l.name === leafName); if (lf) selectLeaf(b, lf); }
+  }
+  function selectLeaf(b, lf) {
+    if (current !== b) return showBranch(b, lf.name);
+    panel.querySelectorAll('[data-l]').forEach(z => z.setAttribute('aria-pressed', b.leaves[+z.dataset.l] === lf));
+    gLeaves.querySelectorAll('.leaf').forEach(z => z.classList.toggle('hit', z.getAttribute('aria-label') === lf.name));
+    const d = document.getElementById('leafd'); if (d) d.innerHTML = `<strong>${lf.name}</strong><br>${lf.d}`;
+  }
+
+  // ---------- quiz: which idea does this leaf belong to?
+  let quiz = null;
+  const allLeaves = B.flatMap(b => b.leaves.map(l => ({ b, l })));
+  function startQuiz() {
+    gLeaves.innerHTML = ''; current = null; mark(null);
+    quiz = quiz && quiz.score ? quiz : { n: 0, score: 0 };
+    quiz.item = allLeaves[Math.floor(Math.random() * allLeaves.length)];
+    quiz.done = false; B.forEach(b => b.g.classList.remove('wrong', 'right'));
+    panel.style.setProperty('--c', '#d99a00');
+    panel.innerHTML = `<div class="ph" style="color:#1a1a1a"><span class="ic" style="background:rgba(0,0,0,.08)">${svgIcon('compass', 32, '#1a1a1a')}</span><div><small style="opacity:.75">Quiz me</small><h2 style="color:#1a1a1a">Which idea is this?</h2></div></div>
+      <div class="pb quizc"><div class="def">${quiz.item.l.d}</div>
+      <p class="muted" style="margin:0">Click the idea on the map that this belongs to.</p>
+      <div class="fb" id="fb"></div><div class="score" id="score">score ${quiz.score} / ${quiz.n}</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn quiz" type="button" id="qNext">Next question</button><button class="btn ghost" type="button" id="qStop">Stop</button></div></div>`;
+    document.getElementById('qNext').onclick = startQuiz;
+    document.getElementById('qStop').onclick = () => { quiz = null; B.forEach(b => b.g.classList.remove('wrong', 'right')); showHub(); };
+  }
+  function answerQuiz(b) {
+    if (quiz.done) return;
+    const ok = b === quiz.item.b; quiz.done = true; quiz.n++; if (ok) quiz.score++;
+    b.g.classList.add(ok ? 'right' : 'wrong'); quiz.item.b.g.classList.add('right');
+    document.getElementById('fb').innerHTML = (ok ? '<span style="color:var(--go)">✓ Yes!</span> ' : '<span style="color:var(--stop)">✗ Not quite.</span> ') + `It is <b>${quiz.item.l.name}</b>, in <b>${B.indexOf(quiz.item.b) + 1}. ${quiz.item.b.name}</b>.`;
+    document.getElementById('score').textContent = `score ${quiz.score} / ${quiz.n}`;
+  }
+
+  // ---------- search
+  document.getElementById('find').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase(); B.forEach(b => b.g.classList.remove('hit'));
+    if (q.length < 2) return;
+    let first = null;
+    B.forEach(b => { const leaf = b.leaves.find(l => (l.name + ' ' + l.d).toLowerCase().includes(q)); const own = (b.name + ' ' + b.plain).toLowerCase().includes(q);
+      if (leaf || own) { b.g.classList.add('hit'); if (!first) first = [b, leaf]; } });
+    if (first && !quiz) showBranch(first[0], first[1] && first[1].name);
+  });
+  document.getElementById('btnHub').onclick = showHub;
+  document.getElementById('btnQuiz').onclick = () => { quiz = null; startQuiz(); };
+
+  // ---------- outline
+  document.getElementById('outlineList').innerHTML = B.map((b, i) => `<details style="--c:${b.color}"><summary>${i + 1}. ${b.name}</summary>
+    <p style="margin:.4rem 0"><em>${b.q}</em></p><p style="margin:.4rem 0">${b.plain} <b>${b.key[0]}</b>: ${b.key[1]}.</p>
+    <ul>${b.leaves.map(l => `<li><strong>${l.name}</strong>: ${l.d}</li>`).join('')}</ul></details>`).join('');
+
+  showHub();
 })();
 </script>
 </body>
