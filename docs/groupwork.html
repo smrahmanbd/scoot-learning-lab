@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT Group Work</title>
+<meta name="description" content="Six group-investigation questions on SCOOT for beginners, with fundamentals, animations and answers.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .gw-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 1.2rem 0 1.6rem; padding: 0; list-style: none; }
+  .gw-steps li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .gw-steps b { display: flex; align-items: center; gap: 8px; font: 700 1.2rem var(--display); }
+  .gw-steps b i { font-style: normal; width: 30px; height: 30px; border-radius: 50%; background: var(--amber); color: #1a1a1a; display: grid; place-items: center; font-size: 1rem; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .gchip { text-decoration: none; display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; color: #fff; font: 700 .9rem var(--display); }
+  .fchip { text-decoration: none; display: inline-block; padding: 2px 9px; border-radius: 999px; border: 1.5px solid var(--amber); font: 700 .9rem var(--display); text-decoration: none; }
+  .fund-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-top: 1rem; }
+  .fund { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 16px; }
+  .fund h3 { font-size: 1.35rem; } .fund h3 span { color: var(--amber-ink); margin-right: 6px; }
+  .fund ul { margin: 0; padding-left: 1.1rem; } .fund li { margin: .15rem 0; }
+  .fund .ex { background: #fff4e0; color: #2b2100; border-radius: 8px; padding: 8px 10px; font-size: .95rem; }
+  .fund .ex b:first-child { color: #8a5a12; letter-spacing: .06em; font-size: .78rem; text-transform: uppercase; margin-right: 6px; }
+  .fund img { width: 100%; border-radius: 8px; border: 1px solid var(--line); background: #f5f3ee; }
+  .q { border: 1px solid var(--line); border-left: 8px solid var(--c); border-radius: 14px; background: var(--surface); padding: 0; margin: 1.4rem 0; overflow: hidden; scroll-margin-top: 16px; }
+  .q .qh { background: var(--c); color: #fff; padding: 14px 18px; }
+  .q .qh small { display: block; font: 700 .8rem var(--body); letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+  .q .qh h3 { color: #fff; font-size: 1.55rem; margin-top: 4px; }
+  .q .qb { padding: 14px 18px 18px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .q .qb { grid-template-columns: 1fr; } }
+  .q img { width: 100%; border-radius: 8px; border: 1px solid var(--line); background: #f5f3ee; }
+  .q .watch { font-size: .92rem; color: var(--muted); font-style: italic; margin: 4px 0 0; }
+  .q ol { margin: .2rem 0 .6rem; padding-left: 1.3rem; } .q li { margin: .3rem 0; }
+  .q .report { background: #fff4e0; color: #2b2100; border-radius: 8px; padding: 8px 12px; font-size: .95rem; margin-top: 10px; }
+  .q details { grid-column: 1 / -1; border-top: 1px dashed var(--line); padding-top: 10px; }
+  .q summary { cursor: pointer; font: 700 1.15rem var(--display); color: var(--fg); }
+  .q .ans { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 10px; }
+  @media (max-width: 760px) { .q .ans { grid-template-columns: 1fr; } }
+  .q .ans ul { margin: 0; padding-left: 1.1rem; } .q .ans li { margin: .35rem 0; }
+  .key { background: var(--c); color: #fff; border-radius: 10px; padding: 10px 14px; text-align: center; margin-top: 8px; }
+  .key b { display: block; font: 700 1.8rem var(--mono); }
+  .discuss { background: var(--sunk); border-radius: 10px; padding: 10px 12px; margin-top: 8px; font-size: .95rem; }
+  .discuss b { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--amber-ink); display: block; }
+  .bars { display: grid; gap: 6px; margin-top: 6px; } .bars div { display: grid; grid-template-columns: 6.5em 1fr 3.5em; gap: 8px; align-items: center; font-size: .92rem; }
+  .bars span.bar { height: 16px; border-radius: 4px; }
+  .teacher { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: .6rem 0 0; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="level-head prose">
+    <h1>Investigate SCOOT in groups</h1>
+    <p class="lede">Six questions, one per group. Each question comes with an animation, three prompts and the building blocks you need. Investigate, report back in three minutes, then compare with the answer.</p>
+    <p class="teacher"><a class="btn" style="text-decoration:none" href="viewer.html?doc=materials/SCOOT_Foundation_Presentation.pdf&amp;mode=slides&amp;dl=materials/SCOOT_Foundation_Presentation.pptx">Open the slides</a>
+    <a class="btn ghost" style="text-decoration:none" href="materials/SCOOT_Foundation_Presentation.pptx" download>Slides .pptx (animated)</a>
+    <button class="btn ghost" type="button" id="toggleAll">Show all answers</button></p>
+  </header>
+  <ol class="gw-steps">
+    <li><b><i>1</i>Get your question</b><span>Six groups, one question each. Read it together and watch its animation twice.</span></li>
+    <li><b><i>2</i>Investigate (15 min)</b><span>Start with the fundamentals marked for your group (F1–F9), then your section’s slides, the study guide and the website. Do the small calculation by hand.</span></li>
+    <li><b><i>3</i>Report back (3 min)</b><span>One sentence answer, one key number, and explain the animation to the class in your own words.</span></li>
+    <li><b><i>4</i>Discuss</b><span>The class asks one question to each group. Then we check against the answer slide.</span></li>
+  </ol>
+  <nav class="prose" aria-label="Questions"><div class="chips"><a class="fchip" style="border-color:#0B3954" href="#g1">Group 1 · Small nudges</a><a class="fchip" style="border-color:#04505A" href="#g2">Group 2 · Detectors &amp; LPUs</a><a class="fchip" style="border-color:#2F5A1C" href="#g3">Group 3 · Platoons spread</a><a class="fchip" style="border-color:#8F3520" href="#g4">Group 4 · Queue &amp; DoS</a><a class="fchip" style="border-color:#7A4412" href="#g5">Group 5 · Validation</a><a class="fchip" style="border-color:#5A2F38" href="#g6">Group 6 · SCOOT vs others</a><a class="fchip" href="#fundamentals">Fundamentals F1–F9</a></div></nav>
+  <section class="q" id="g1" style="--c:#0B3954">
+    <div class="qh"><small>Group 1 · Small nudges</small><h3>Why does SCOOT change the lights only a few seconds at a time?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_13_elastic_plan.gif" alt="Animation: Morning rush: a fixed plan vs SCOOT’s small, frequent changes." loading="lazy"><p class="watch">Watch: Morning rush: a fixed plan vs SCOOT’s small, frequent changes.</p></div>
+      <div><b>Investigate</b><ol type="a"><li>What are the <b>split</b>, the <b>cycle</b> and the <b>offset</b>? Explain each in one line.</li><li>Count the timing decisions SCOOT makes at one junction in one hour (60 s cycle, two stages).</li><li>What could go wrong if SCOOT made one big change instead of many small ones?</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F1">F1</a><a class="fchip" href="#F6">F6</a><a class="fchip" href="#F7">F7</a><a class="fchip" href="#F8">F8</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 1 · website: What SCOOT is</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: Small nudges, many times an hour</summary>
+        <div class="ans"><ul><li><b>Split</b> = how the green is shared between stages. <b>Cycle</b> = time to run all stages once. <b>Offset</b> = timing between neighbouring junctions.</li><li>SCOOT tries a small change before every stage change (split), once per cycle (offset) and every 5 minutes (cycle).</li><li>Decisions per hour: 120 split + 60 offset + 12 cycle = <b>about 192</b>.</li><li>Each nudge is a few seconds, so one wrong guess cannot do much harm; together they follow the traffic, like a thermostat.</li></ul>
+          <div><img src="animations/SCOOT_06_split_optimiser.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>≈ 192</b>timing decisions per hour at one junction</div>
+          <div class="discuss"><b>Discuss</b>Ask: why not just pick the best plan once each morning? (Traffic changes minute by minute; a stored plan is out of date by the time the peak arrives.)</div></div></div></details>
+    </div>
+  </section>
+  <section class="q" id="g2" style="--c:#04505A">
+    <div class="qh"><small>Group 2 · Detectors &amp; LPUs</small><h3>Why is SCOOT’s detector far up the road, and why does a bus count more than a car?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_01_upstream_detection.gif" alt="Animation: A platoon is counted just after the upstream junction, long before the stop line." loading="lazy"><p class="watch">Watch: A platoon is counted just after the upstream junction, long before the stop line.</p></div>
+      <div><b>Investigate</b><ol type="a"><li>Where is the SCOOT loop, and what does SCOOT gain from putting it there?</li><li>What is an LPU? Write the rule used in this lab.</li><li>Work out the LPUs for a car (4.5 m) and a bus (12 m) at 13.5 m/s over a 2 m loop.</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F2">F2</a><a class="fchip" href="#F3">F3</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 2 · website: Detectors and LPUs</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: Early warning, and a fair measure of traffic</summary>
+        <div class="ans"><ul><li>The loop sits just after the <b>upstream</b> junction, so SCOOT learns about cars <b>10–20 s</b> before they reach the stop line and can get the green ready.</li><li>An <b>LPU</b> (link profile unit) mixes a count with how long the loop is covered: LPU = 1 × vehicle + 2 × seconds covered.</li><li>Car: (4.5 + 2) ÷ 13.5 = 0.48 s → <b>1.96 LPU</b>. Bus: (12 + 2) ÷ 13.5 = 1.04 s → <b>3.07 LPU</b>.</li><li>Long or slow vehicles cover the loop longer and need more green, so they score more.</li></ul>
+          <div><img src="animations/SCOOT_02_LPU_car_vs_bus.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>1.96 vs 3.07</b>LPUs for a car and a bus</div>
+          <div class="discuss"><b>Discuss</b>Ask: what happens to a car’s LPU if it crawls over the loop in a jam? (Covered longer, more LPUs: an early sign of congestion.)</div></div></div></details>
+    </div>
+  </section>
+  <section class="q" id="g3" style="--c:#2F5A1C">
+    <div class="qh"><small>Group 3 · Platoons spread</small><h3>A platoon passes the detector in 10 s. Why does it reach the stop line spread over about 25 s?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_11_platoon_spreading.gif" alt="Animation: Fast drivers pull ahead, slow drivers fall behind on the way to the stop line." loading="lazy"><p class="watch">Watch: Fast drivers pull ahead, slow drivers fall behind on the way to the stop line.</p></div>
+      <div><b>Investigate</b><ol type="a"><li>What is a <b>cyclic flow profile</b>?</li><li>Why do the first cars arrive after 0.8 × cruise time, not the full cruise time?</li><li>What does <b>F = 0.263</b> mean? What happens to F on a longer road?</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F2">F2</a><a class="fchip" href="#F3">F3</a><a class="fchip" href="#F7">F7</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 3 · website: Profiles and dispersion</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: Shift, then smear</summary>
+        <div class="ans"><ul><li>A cyclic flow profile is the LPUs seen in each second of the cycle, averaged over several cycles.</li><li>Shift: the fastest drivers lead, so arrivals start at 0.8 × T = <b>8 s</b> (T = 10 s cruise time).</li><li>Smear: each second, <b>26%</b> of the new traffic arrives and <b>74%</b> of last second’s arrivals carry over (F = 1 ÷ (1 + 0.35 × 0.8 × 10) = 0.263).</li><li>Same 10 LPU, lower peak (0.95), about 25 s long. Longer road → smaller F (T = 20 s gives 0.15) → more spread.</li></ul>
+          <div><img src="animations/SCOOT_12_dispersion_recipe.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>F = 0.263</b>share of each second’s traffic that arrives first</div>
+          <div class="discuss"><b>Discuss</b>Ask: on a long road, does coordinating the two signals still help much? (Less: the platoon has smeared into steady flow.)</div></div></div></details>
+    </div>
+  </section>
+  <section class="q" id="g4" style="--c:#8F3520">
+    <div class="qh"><small>Group 4 · Queue &amp; DoS</small><h3>SCOOT never sees the queue. How does it know whether a green is long enough?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_05_queue_bathtub.gif" alt="Animation: The bathtub: red fills the queue, green drains it." loading="lazy"><p class="watch">Watch: The bathtub: red fills the queue, green drains it.</p></div>
+      <div><b>Investigate</b><ol type="a"><li>Explain the queue model with a bathtub: what are the tap, the plug and the plughole?</li><li>Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s: how big is the queue at the end of red, and when does it clear?</li><li>Work out the degree of saturation (DoS). Why aim for about 90%, not 100%?</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F1">F1</a><a class="fchip" href="#F3">F3</a><a class="fchip" href="#F4">F4</a><a class="fchip" href="#F5">F5</a><a class="fchip" href="#F6">F6</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 4 · website: The queue model</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: A model queue, drained by the green</summary>
+        <div class="ans"><ul><li>SCOOT <b>models</b> the queue from the upstream counts: arrivals are the tap, red is the plug, and SATO is the size of the plughole.</li><li>End of red: 0.2 × 35 = <b>7 LPU</b>. In green it shrinks at 0.6 − 0.2 = 0.4 LPU/s, so it clears after 7 ÷ 0.4 = <b>17.5 s</b>.</li><li>DoS = demand ÷ what the green can clear = (0.2 × 60) ÷ (25 × 0.6) = 12 ÷ 15 = <b>0.80</b>.</li><li>Aiming for about 90% leaves a margin for random surges. Above 100% the queue grows every cycle.</li></ul>
+          <div><img src="animations/SCOOT_15_degree_of_saturation.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>DoS 0.80</b>under the 90% target: spare green</div>
+          <div class="discuss"><b>Discuss</b>Ask: if this link has spare green, where should SCOOT give it? (To the busiest stage at the junction, a few seconds at a time.)</div></div></div></details>
+    </div>
+  </section>
+  <section class="q" id="g5" style="--c:#7A4412">
+    <div class="qh"><small>Group 5 · Validation</small><h3>The model says the queue clears in 32 s; the engineer’s stopwatch says 36 s. Who is right, and what do you change?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_10_SATO_queue_discharge.gif" alt="Animation: A queue drains across the stop line at the saturation occupancy (SATO)." loading="lazy"><p class="watch">Watch: A queue drains across the stop line at the saturation occupancy (SATO).</p></div>
+      <div><b>Investigate</b><ol type="a"><li>What is <b>SATO</b>, and why can it differ from street to street?</li><li>Queue 19.5 LPU (10 cars), start lag 3 s, observed clear time 36 s: what should SATO be?</li><li>Name two other settings an engineer checks when validating a link.</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F2">F2</a><a class="fchip" href="#F4">F4</a><a class="fchip" href="#F6">F6</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 5 · website: Validation</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: The street is right: tune the model</summary>
+        <div class="ans"><ul><li><b>SATO</b> is how fast a standing queue drains in green, in LPU per second. It depends on lane width, gradient, turning traffic and parking.</li><li>The street is always right. SATO = queue ÷ (clear time − start lag) = 19.5 ÷ (36 − 3) = <b>0.59 LPU/s</b> (the model had 0.67).</li><li>Other settings: journey (cruise) time, start and end lags, and the maximum queue clear time.</li><li>Like tuning a guitar: a well-built model still plays wrong notes until it is tuned to the street.</li></ul>
+          <div><img src="animations/SCOOT_14_validation_SATO.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>0.59 LPU/s</b>SATO after tuning (was 0.67)</div>
+          <div class="discuss"><b>Discuss</b>Ask: what goes wrong if SATO is set too high? (The model thinks queues clear sooner, so SCOOT gives too little green and real queues grow.)</div></div></div></details>
+    </div>
+  </section>
+  <section class="q" id="g6" style="--c:#5A2F38">
+    <div class="qh"><small>Group 6 · SCOOT vs others</small><h3>Is SCOOT always the best way to run traffic lights?</h3></div>
+    <div class="qb">
+      <div><img src="animations/SCOOT_16_fixed_actuated_scoot.gif" alt="Animation: One junction, the same arrivals, three ways to run the lights (Lab F3)." loading="lazy"><p class="watch">Watch: One junction, the same arrivals, three ways to run the lights (Lab F3).</p></div>
+      <div><b>Investigate</b><ol type="a"><li>How do fixed time, actuated and SCOOT signals each decide the green?</li><li>Compare the mean delay of the three controllers in Lab F3. By how much does SCOOT win?</li><li>When might a fixed plan or simple actuation be good enough?</li></ol>
+        <div class="chips"><span class="muted" style="font-size:.9rem">Fundamentals:</span><a class="fchip" href="#F1">F1</a><a class="fchip" href="#F5">F5</a><a class="fchip" href="#F8">F8</a></div>
+        <p class="muted" style="font-size:.9rem;margin:.4rem 0 0">Look in: Section 6 · website: Live junction</p>
+        <div class="report"><b>Report back:</b> one-sentence answer · one key number · explain the animation</div></div>
+      <details><summary>Show the answer: Usually better, not always</summary>
+        <div class="ans"><ul><li><b>Fixed time</b> follows a stored plan. <b>Actuated</b> extends the green while cars keep arriving at the stop line. <b>SCOOT</b> predicts from upstream and coordinates junctions.</li><li>Lab F3, one junction: 18.96 / 14.48 / <b>12.79 s</b> mean delay, so SCOOT has 33% less delay than fixed time and 12% less than actuation.</li><li>Not always: in the four-junction corridor run, actuation had slightly less delay (29.1 vs 30.4 s), while SCOOT had fewer stops and much less bus delay.</li><li>A simple controller can be enough at isolated, lightly used junctions. SCOOT needs working detectors and a validated model.</li></ul>
+          <div><p style="margin:0;font-weight:600">Lab F3: mean delay (s/veh)</p><div class="bars"><div><span>Fixed time</span><span class="bar" style="width:100%;background:#A34B12"></span><span>18.96</span></div><div><span>Actuated</span><span class="bar" style="width:76%;background:#7A4F9A"></span><span>14.48</span></div><div><span>SCOOT</span><span class="bar" style="width:67%;background:#23704A"></span><span>12.79</span></div></div><div class="key"><b>12.79 s</b>SCOOT mean delay in Lab F3 (fixed 18.96)</div>
+          <div class="discuss"><b>Discuss</b>Ask: which number matters most to you as an engineer: delay, stops, or bus delay? Why?</div></div></div></details>
+    </div>
+  </section>
+  <section class="prose" style="max-width:none"><h2 id="fundamentals">Fundamentals for every group</h2>
+    <p class="muted" style="max-width:760px">Nine short building blocks before you start. Each group needs only some of them: the chips on every slide tell you which.</p></section>
+  <div class="fund-grid">
+    <article class="fund" id="F1"><h3><span>F1</span>What a traffic signal controls</h3>
+      <p style="margin:0">A signal shares one road space between movements that would collide. It gives each group of movements a turn, over and over, like a teacher letting one row of students out at a time.</p><ul><li><b>Stage</b>: movements that get green together (for example the main road, then the side road).</li><li><b>Cycle C</b>: the time to run every stage once, for example 60 s.</li><li><b>Intergreen</b>: amber + all-red between stages; partly lost time, when nobody moves well.</li><li><b>Split</b>: how the green is shared, for example 26 s for the main road and 24 s for the side road.</li></ul>
+      <div class="ex"><b>Try the numbers</b>60 s cycle = 26 s green A + 5 s intergreen + 24 s green B + 5 s intergreen.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#0B3954" href="#g1">1</a><a class="gchip" style="background:#8F3520" href="#g4">4</a><a class="gchip" style="background:#5A2F38" href="#g6">6</a></div></article>
+    <article class="fund" id="F2"><h3><span>F2</span>A road network in SCOOT words</h3>
+      <p style="margin:0">SCOOT sees a town as junctions joined by one-way approach roads. Each approach has its own detector and its own little model.</p><ul><li><b>Node</b>: a signalled junction.</li><li><b>Link</b>: one approach road, from its detector to its stop line.</li><li><b>Platoon</b>: a bunch of cars released together by the upstream green.</li><li><b>Cruise time T</b>: how long a car takes from the detector to the stop line, for example 10 s.</li></ul>
+      <div class="ex"><b>Try the numbers</b>A 140 m link driven at 14 m/s (50 km/h) has a cruise time of 140 ÷ 14 = 10 s.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#04505A" href="#g2">2</a><a class="gchip" style="background:#2F5A1C" href="#g3">3</a><a class="gchip" style="background:#7A4412" href="#g5">5</a></div></article>
+    <article class="fund" id="F3"><h3><span>F3</span>Measuring traffic: flow, headway, occupancy</h3>
+      <p style="margin:0">Three ways to describe the same stream of cars: how many pass, how far apart they are in time, and how much of the time the detector is covered.</p><ul><li><b>Flow q</b>: vehicles per hour (veh/h) or per second.</li><li><b>Headway</b>: seconds between one car and the next; headway = 1 ÷ flow.</li><li><b>Occupancy</b>: share of time the detector is covered. Long or slow vehicles cover it longer.</li><li>SCOOT’s <b>LPU</b> mixes the count with the covered time (group 2).</li></ul>
+      <div class="ex"><b>Try the numbers</b>540 veh/h = 540 ÷ 3600 = 0.15 veh/s, so one car every 1 ÷ 0.15 ≈ 6.7 s.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#04505A" href="#g2">2</a><a class="gchip" style="background:#2F5A1C" href="#g3">3</a><a class="gchip" style="background:#8F3520" href="#g4">4</a></div></article>
+    <article class="fund" id="F4"><h3><span>F4</span>Saturation flow and capacity</h3>
+      <p style="margin:0">When the light turns green, a standing queue leaves at a steady top speed, one car about every 2 s per lane. That top rate is the saturation flow. SCOOT measures the same idea in LPU per second and calls it SATO.</p><ul><li><b>Saturation flow s</b>: about 1800 veh/h per lane (1 car every 2 s) on a good lane.</li><li><b>Start lag</b>: the first cars take a few seconds to get going.</li><li><b>Capacity</b> = s × g ÷ C: what the approach can carry per hour.</li><li>Narrow lanes, hills, parking and turning traffic lower s.</li></ul><img src="animations/SCOOT_10_SATO_queue_discharge.gif" alt="Animation: A queue drains at the saturation rate (shown in LPU/s)" loading="lazy">
+      <div class="ex"><b>Try the numbers</b>s = 1800 veh/h, green g = 25 s, cycle C = 60 s: capacity = 1800 × 25 ÷ 60 = 750 veh/h.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#8F3520" href="#g4">4</a><a class="gchip" style="background:#7A4412" href="#g5">5</a></div></article>
+    <article class="fund" id="F5"><h3><span>F5</span>Queues, delay and stops</h3>
+      <p style="margin:0">During red, arriving cars pile up. During green the queue drains faster than cars arrive, so it shrinks. Waiting time is delay; every car that had to brake to a halt is a stop.</p><ul><li>Queue grows in red at the <b>arrival rate</b>.</li><li>In green it shrinks at <b>saturation flow − arrival rate</b>.</li><li><b>Delay</b> = area under the queue line (vehicle-seconds).</li><li><b>Stops</b> = cars arriving before the queue clears.</li></ul>
+      <div class="ex"><b>Try the numbers</b>Arrivals 0.15 veh/s, red 35 s, s = 0.5 veh/s: queue 0.15 × 35 = 5.25 veh, clears after 5.25 ÷ 0.35 = 15 s of green.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#8F3520" href="#g4">4</a><a class="gchip" style="background:#5A2F38" href="#g6">6</a></div></article>
+    <article class="fund" id="F6"><h3><span>F6</span>Degree of saturation: is the green big enough?</h3>
+      <p style="margin:0">Compare what arrives with what the green can clear. A number below 1 means spare green; above 1 means the queue grows every cycle.</p><ul><li><b>DoS</b> = demand ÷ capacity.</li><li>Below about <b>0.9</b>: comfortable, room for random surges.</li><li>About <b>1.0</b>: the green is just used up.</li><li>Above <b>1.0</b>: queues grow every cycle, whatever the timing.</li></ul>
+      <div class="ex"><b>Try the numbers</b>Demand 540 veh/h, capacity 750 veh/h: DoS = 540 ÷ 750 = 0.72 (72%).</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#0B3954" href="#g1">1</a><a class="gchip" style="background:#8F3520" href="#g4">4</a><a class="gchip" style="background:#7A4412" href="#g5">5</a></div></article>
+    <article class="fund" id="F7"><h3><span>F7</span>Coordinating junctions: offsets and green waves</h3>
+      <p style="margin:0">Neighbouring signals can be timed so a platoon released by one arrives at the next just as it turns green. The time between their greens is the offset.</p><ul><li><b>Offset</b>: time from green at one junction to green at the next.</li><li>Good offset ≈ travel time between them, so the platoon meets a green.</li><li>Neighbours must share a cycle (a <b>region</b>) to keep the wave.</li><li>The wave works best when platoons stay tight (group 3).</li></ul><img src="animations/SCOOT_07_offset_optimiser.gif" alt="Animation: Trying offsets to catch the platoon on green" loading="lazy">
+      <div class="ex"><b>Try the numbers</b>Junctions 300 m apart at 15 m/s: travel time 20 s, so set the second green about 20 s after the first.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#0B3954" href="#g1">1</a><a class="gchip" style="background:#2F5A1C" href="#g3">3</a></div></article>
+    <article class="fund" id="F8"><h3><span>F8</span>Three ways to run a signal</h3>
+      <p style="margin:0">All signals share the road; they differ in how they decide the green.</p><ul><li><b>Fixed time</b>: Runs a stored plan, often made off-line with Webster or TRANSYT. Cheap and predictable, but cannot react.</li><li><b>Actuated</b>: Loops at the stop line extend the green while cars keep coming, and end it on a gap. Reacts, but only locally.</li><li><b>Adaptive (SCOOT)</b>: Loops upstream feed a model; small, frequent changes to split, cycle and offset across a region.</li></ul>
+      <div class="ex"><b>Try the numbers</b>Rule of thumb: the more traffic changes and the closer the junctions, the more an adaptive system can help.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#0B3954" href="#g1">1</a><a class="gchip" style="background:#5A2F38" href="#g6">6</a></div></article>
+    <article class="fund" id="F9"><h3><span>F9</span>Your investigation toolkit</h3>
+      <p style="margin:0">Every group follows the same four moves. The table shows which building blocks to revise first.</p><ul><li><b>Watch</b> your animation twice: what changes, and why?</li><li><b>Explain</b> it in everyday words, with one analogy.</li><li><b>Calculate</b> the small example by hand, step by step.</li><li><b>Check units</b>: s, veh/h, veh/s, LPU, LPU/s, %.</li></ul><table style="font-size:.92rem"><tbody><tr><td><b style="color:#0B3954">1 Small nudges</b></td><td>F1 · F6 · F7 · F8</td></tr><tr><td><b style="color:#04505A">2 Detectors &amp; LPUs</b></td><td>F2 · F3</td></tr><tr><td><b style="color:#2F5A1C">3 Platoons spread</b></td><td>F2 · F3 · F7</td></tr><tr><td><b style="color:#8F3520">4 Queue &amp; DoS</b></td><td>F1 · F3 · F4 · F5 · F6</td></tr><tr><td><b style="color:#7A4412">5 Validation</b></td><td>F2 · F4 · F6</td></tr><tr><td><b style="color:#5A2F38">6 SCOOT vs others</b></td><td>F1 · F5 · F8</td></tr></tbody></table>
+      <div class="ex"><b>Try the numbers</b>Stuck? Re-read the building block on the chip, then your concept section in these slides.</div>
+      <div class="chips"><span class="muted" style="font-size:.85rem">For groups</span><a class="gchip" style="background:#0B3954" href="#g1">1</a><a class="gchip" style="background:#04505A" href="#g2">2</a><a class="gchip" style="background:#2F5A1C" href="#g3">3</a><a class="gchip" style="background:#8F3520" href="#g4">4</a><a class="gchip" style="background:#7A4412" href="#g5">5</a><a class="gchip" style="background:#5A2F38" href="#g6">6</a></div></article>
+  </div>
+</main>
+<script src="js/common.js"></script>
+<script>
+  (function () {
+    var b = document.getElementById('toggleAll'), open = false;
+    b.addEventListener('click', function () { open = !open; document.querySelectorAll('.q details').forEach(function (d) { d.open = open; }); b.textContent = open ? 'Hide all answers' : 'Show all answers'; });
+  })();
+</script>
+</body>
+</html>

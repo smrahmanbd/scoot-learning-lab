@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT in Animations</title>
+<meta name="description" content="Fourteen short looping animations that explain SCOOT step by step for beginners.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .anim-toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin: 1rem 0 2rem; padding: 0; list-style: none; }
+  .anim-toc a { display: block; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); text-decoration: none; font-weight: 600; }
+  .anim { margin: 0 0 3rem; }
+  .anim figure { margin: 12px 0 0; }
+  .anim img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #f5f3ee; }
+  .anim figcaption { font-size: .95rem; color: var(--muted); margin-top: 6px; }
+  .anim .num { display: inline-block; min-width: 1.4em; color: var(--band); }
+  :root[data-theme="dark"] .anim .num { color: var(--go); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .anim .num { color: var(--go); } }
+  .anim .keys { margin-top: 8px; padding: 10px 14px; border-left: 4px solid var(--amber); background: var(--surface); border-radius: 0 8px 8px 0; }
+  .anim .lvl { font-size: .85rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="level-head prose">
+    <h1>SCOOT in animations</h1>
+    <p class="lede">Fourteen short, looping animations that build SCOOT up one idea at a time, in lecture order. Each has a plain-language explanation and the numbers to look for. The same GIFs play in the slides and in PowerPoint: right-click to save any of them.</p>
+  </header>
+  <nav aria-label="Animations"><ol class="anim-toc">
+    <li><a href="#elastic">1 · Small nudges, all morning</a></li>
+    <li><a href="#detect">2 · Counting cars far up the road</a></li>
+    <li><a href="#lpu">3 · Why a bus counts more than a car</a></li>
+    <li><a href="#profile">4 · Building the cyclic flow profile</a></li>
+    <li><a href="#spread">5 · The platoon spreads out</a></li>
+    <li><a href="#recipe">6 · Robertson’s recipe, one second at a time</a></li>
+    <li><a href="#queue">7 · The queue is a bathtub</a></li>
+    <li><a href="#sato">8 · How fast a queue drains</a></li>
+    <li><a href="#dos">9 · Is the green big enough?</a></li>
+    <li><a href="#split">10 · The split optimiser tries three options</a></li>
+    <li><a href="#offset">11 · Walking towards the green wave</a></li>
+    <li><a href="#cycle">12 · Longer cycles for the peak</a></li>
+    <li><a href="#validate">13 · Tuning the model to the street</a></li>
+    <li><a href="#versus">14 · Fixed time, actuated and SCOOT</a></li>
+  </ol></nav>
+  <section class="prose anim" id="elastic">
+    <p class="lvl">Foundation · the elastic plan</p>
+    <h2><span class="num">1</span>Small nudges, all morning</h2>
+    <p>A fixed plan keeps the same green all morning. When the rush hour brings more traffic than that green can clear, a queue piles up. SCOOT instead nudges the timings a few seconds at a time, following the traffic like a thermostat follows the temperature.</p>
+    <figure><img src="animations/SCOOT_13_elastic_plan.gif" alt="Animation: Morning rush: a fixed 24 s green against SCOOT’s green, which grows and shrinks with the traffic." loading="lazy" width="1040" height="375"><figcaption>Morning rush: a fixed 24 s green against SCOOT’s green, which grows and shrinks with the traffic.</figcaption></figure>
+    <p class="keys">About <b>192</b> timing decisions an hour at one junction (120 split, 60 offset, 12 cycle), each only a few seconds.</p>
+  </section>
+  <section class="prose anim" id="detect">
+    <p class="lvl">Foundation · detectors</p>
+    <h2><span class="num">2</span>Counting cars far up the road</h2>
+    <p>The SCOOT loop sits just after the <b>upstream</b> junction, not at the stop line. It sees each platoon long before it arrives, so the model can predict when the cars reach the stop line and get the green ready.</p>
+    <figure><img src="animations/SCOOT_01_upstream_detection.gif" alt="Animation: A platoon released by the upstream green is counted at the loop, then arrives on green." loading="lazy" width="1040" height="375"><figcaption>A platoon released by the upstream green is counted at the loop, then arrives on green.</figcaption></figure>
+    <p class="keys"><b>10–20 s</b> of warning on a real street; the loop is read <b>4</b> times a second.</p>
+  </section>
+  <section class="prose anim" id="lpu">
+    <p class="lvl">Foundation · LPUs</p>
+    <h2><span class="num">3</span>Why a bus counts more than a car</h2>
+    <p>SCOOT does not just count vehicles. It measures traffic in <b>link profile units</b> (LPUs), which add how long the loop is covered. A long or slow vehicle covers the loop longer and needs more green, so it scores more.</p>
+    <figure><img src="animations/SCOOT_02_LPU_car_vs_bus.gif" alt="Animation: Slow motion (×5): a 4.5 m car and a 12 m bus cross a 2 m loop at 13.5 m/s." loading="lazy" width="1040" height="375"><figcaption>Slow motion (×5): a 4.5 m car and a 12 m bus cross a 2 m loop at 13.5 m/s.</figcaption></figure>
+    <p class="keys">LPU = 1 × vehicle + 2 × seconds covered. Car: (4.5 + 2) ÷ 13.5 = 0.48 s → <b>1.96 LPU</b>. Bus: 1.04 s → <b>3.07 LPU</b>.</p>
+  </section>
+  <section class="prose anim" id="profile">
+    <p class="lvl">Foundation · profiles</p>
+    <h2><span class="num">4</span>Building the cyclic flow profile</h2>
+    <p>SCOOT keeps one bar for every second of the cycle: how many LPUs usually pass the loop at that moment. Each new cycle is blended in gently, so the platoon’s place in the cycle stands out while random noise fades.</p>
+    <figure><img src="animations/SCOOT_03_cyclic_flow_profile.gif" alt="Animation: Five cycles: this cycle’s counts (top) and the smoothed profile SCOOT keeps (bottom)." loading="lazy" width="1040" height="375"><figcaption>Five cycles: this cycle’s counts (top) and the smoothed profile SCOOT keeps (bottom).</figcaption></figure>
+    <p class="keys">New bar = <b>0.75</b> × old bar + <b>0.25</b> × this cycle; one odd cycle can move the profile only a quarter of the way.</p>
+  </section>
+  <section class="prose anim" id="spread">
+    <p class="lvl">Foundation · dispersion</p>
+    <h2><span class="num">5</span>The platoon spreads out</h2>
+    <p>Cars leave the upstream junction together, but drivers differ: fast ones pull ahead and slow ones fall behind. By the stop line the bunch is longer and thinner. SCOOT must predict this, because what matters is when cars reach the stop line.</p>
+    <figure><img src="animations/SCOOT_11_platoon_spreading.gif" alt="Animation: Green = fast drivers, orange = slow drivers; compare the spread at the loop and at the stop line." loading="lazy" width="1040" height="375"><figcaption>Green = fast drivers, orange = slow drivers; compare the spread at the loop and at the stop line.</figcaption></figure>
+    <p class="keys">Same cars, arriving over a <b>longer</b> time with a <b>lower</b> peak. A longer road means more spreading.</p>
+  </section>
+  <section class="prose anim" id="recipe">
+    <p class="lvl">Foundation · dispersion</p>
+    <h2><span class="num">6</span>Robertson’s recipe, one second at a time</h2>
+    <p>Each second, SCOOT predicts the arrivals at the stop line as a share F of the traffic seen at the loop plus the rest of last second’s arrivals carried over. It is a running average that shifts and smooths the platoon.</p>
+    <figure><img src="animations/SCOOT_12_dispersion_recipe.gif" alt="Animation: Dark = F × traffic detected now; light = (1 − F) × last second’s arrival, carried over." loading="lazy" width="1040" height="375"><figcaption>Dark = F × traffic detected now; light = (1 − F) × last second’s arrival, carried over.</figcaption></figure>
+    <p class="keys">T = 10 s: lag 0.8 T = <b>8 s</b>, F = 1 ÷ (1 + 0.35 × 0.8 × 10) = <b>0.263</b>; the peak reaches 0.95 and the platoon lasts about 25 s.</p>
+  </section>
+  <section class="prose anim" id="queue">
+    <p class="lvl">Foundation · the queue model</p>
+    <h2><span class="num">7</span>The queue is a bathtub</h2>
+    <p>Arrivals are a tap that never stops. During red the plug is in, so the queue grows. During green the plughole drains it at the saturation occupancy (SATO). SCOOT never sees this queue: it models it from the upstream counts.</p>
+    <figure><img src="animations/SCOOT_05_queue_bathtub.gif" alt="Animation: Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start." loading="lazy" width="1040" height="375"><figcaption>Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start.</figcaption></figure>
+    <p class="keys">End of red: <b>7 LPU</b>. It drains at 0.6 − 0.2 = 0.4 LPU/s and clears <b>17.5 s</b> into green. Delay = shaded area = <b>183.75 LPU·s</b>.</p>
+  </section>
+  <section class="prose anim" id="sato">
+    <p class="lvl">Foundation · saturation occupancy</p>
+    <h2><span class="num">8</span>How fast a queue drains</h2>
+    <p>When the light turns green the drivers need a moment to react (the start lag); then the queue crosses the stop line at a steady top rate. That rate is SATO. A lane with a bigger SATO empties sooner and needs less green.</p>
+    <figure><img src="animations/SCOOT_10_SATO_queue_discharge.gif" alt="Animation: Two lanes with the same six-car queue: SATO 0.6 LPU/s (a car every 3.3 s) and 1.0 LPU/s (a car every 2 s)." loading="lazy" width="1040" height="375"><figcaption>Two lanes with the same six-car queue: SATO 0.6 LPU/s (a car every 3.3 s) and 1.0 LPU/s (a car every 2 s).</figcaption></figure>
+    <p class="keys">Start lag <b>3 s</b>; the slope of the cleared-LPU line <b>is</b> SATO.</p>
+  </section>
+  <section class="prose anim" id="dos">
+    <p class="lvl">Foundation · degree of saturation</p>
+    <h2><span class="num">9</span>Is the green big enough?</h2>
+    <p>The degree of saturation (DoS) compares what arrives in a cycle with what the green can clear. SCOOT aims to keep the busiest link near 90%, leaving a margin for random surges.</p>
+    <figure><img src="animations/SCOOT_15_degree_of_saturation.gif" alt="Animation: One link: traffic grows, the gauge goes into the red, and the split optimiser gives the stage more green." loading="lazy" width="1040" height="375"><figcaption>One link: traffic grows, the gauge goes into the red, and the split optimiser gives the stage more green.</figcaption></figure>
+    <p class="keys">12.0 ÷ 15.0 = <b>0.80</b> → traffic grows: 14.4 ÷ 15.0 = <b>0.96</b> → 4 s more green: 14.4 ÷ 17.4 = <b>0.83</b>.</p>
+  </section>
+  <section class="prose anim" id="split">
+    <p class="lvl">Advanced · split optimiser</p>
+    <h2><span class="num">10</span>The split optimiser tries three options</h2>
+    <p>A few seconds before every stage change, SCOOT asks the model: change it 4 s earlier, keep it, or 4 s later? It picks the option that keeps the worst link (the highest DoS) lowest, and stores a small permanent change too.</p>
+    <figure><img src="animations/SCOOT_06_split_optimiser.gif" alt="Animation: Stage A demand 24 LPU, stage B 10 LPU; the three options and their worst DoS." loading="lazy" width="1040" height="375"><figcaption>Stage A demand 24 LPU, stage B 10 LPU; the three options and their worst DoS.</figcaption></figure>
+    <p class="keys">Worst DoS: −4 s <b>0.92</b>, no change <b>0.80</b>, +4 s <b>0.71</b> → +4 s wins; the stored plan moves by 1 s (30 → 31 s).</p>
+  </section>
+  <section class="prose anim" id="offset">
+    <p class="lvl">Advanced · offset optimiser</p>
+    <h2><span class="num">11</span>Walking towards the green wave</h2>
+    <p>Once a cycle, SCOOT tries the offset between two junctions 4 s earlier, unchanged and 4 s later, and keeps the one with the lowest performance index (delay + stops). Cycle by cycle it walks towards a green wave.</p>
+    <figure><img src="animations/SCOOT_07_offset_optimiser.gif" alt="Animation: Time–distance picture of two junctions 300 m apart; each line is a car." loading="lazy" width="1040" height="375"><figcaption>Time–distance picture of two junctions 300 m apart; each line is a car.</figcaption></figure>
+    <p class="keys">Offset 8 s → 16 s → 20 s: stops at J2 fall from <b>5</b> to <b>0</b> and the PI from <b>230</b> to <b>94</b>.</p>
+  </section>
+  <section class="prose anim" id="cycle">
+    <p class="lvl">Advanced · cycle optimiser</p>
+    <h2><span class="num">12</span>Longer cycles for the peak</h2>
+    <p>Every few minutes SCOOT checks the busiest (critical) junction in the region. If it is above about 90% the cycle gets longer, which wastes a smaller share of time on stage changes; when the peak eases it holds or shortens.</p>
+    <figure><img src="animations/SCOOT_08_cycle_optimiser.gif" alt="Animation: Flow ratio Y = 0.78 and lost time L = 12 s during the rising peak, then Y falls to 0.70." loading="lazy" width="1040" height="375"><figcaption>Flow ratio Y = 0.78 and lost time L = 12 s during the rising peak, then Y falls to 0.70.</figcaption></figure>
+    <p class="keys">DoS = Y × C ÷ (C − L): 44 s → <b>1.07</b>, 64 s → <b>0.96</b>, 88 s (Y 0.70) → <b>0.81</b>. Lost-time share 27% → 19% → 14%.</p>
+  </section>
+  <section class="prose anim" id="validate">
+    <p class="lvl">Foundation · validation</p>
+    <h2><span class="num">13</span>Tuning the model to the street</h2>
+    <p>Before SCOOT goes live, an engineer with a stopwatch checks each link. If the model’s queue clears at a different time from the real one, the street is right and the model is tuned.</p>
+    <figure><img src="animations/SCOOT_14_validation_SATO.gif" alt="Animation: Queue of 10 cars ≈ 19.5 LPU, start lag 3 s; the model and the street disagree, then SATO is turned down." loading="lazy" width="1040" height="375"><figcaption>Queue of 10 cars ≈ 19.5 LPU, start lag 3 s; the model and the street disagree, then SATO is turned down.</figcaption></figure>
+    <p class="keys">Model (SATO 0.67) clears at 32.1 s, street at 36 s → SATO = 19.5 ÷ (36 − 3) = <b>0.59 LPU/s</b>: now they agree.</p>
+  </section>
+  <section class="prose anim" id="versus">
+    <p class="lvl">Foundation · comparison</p>
+    <h2><span class="num">14</span>Fixed time, actuated and SCOOT</h2>
+    <p>Fixed time follows a stored plan; actuated signals extend the green while cars keep arriving at the stop line; SCOOT predicts from upstream and adapts gently. Same junction, same cars, one simulated hour in SUMO (Lab F3).</p>
+    <figure><img src="animations/SCOOT_16_fixed_actuated_scoot.gif" alt="Animation: Queues and mean delay build up over one simulated hour." loading="lazy" width="1040" height="375"><figcaption>Queues and mean delay build up over one simulated hour.</figcaption></figure>
+    <p class="keys">Mean delay: fixed <b>18.96 s</b>, actuated <b>14.48 s</b>, SCOOT <b>12.79 s</b> (33% less than fixed, 12% less than actuated).</p>
+  </section>
+  <p class="prose muted">Want to try these yourself? The <a href="foundation.html">Foundation</a> and <a href="advanced.html">Advanced</a> pages have interactive versions, and the <a href="groupwork.html">group work</a> page turns them into class questions.</p>
+</main>
+<script src="js/common.js"></script>
+
+</body>
+</html>
