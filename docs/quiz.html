@@ -13,7 +13,7 @@
 <main class="wrap">
   <header class="level-head prose">
     <h1>Quiz bank</h1>
-    <p class="lede">All 42 level questions plus 60 group-work questions (ten per group), each with an explanation. Pick a set, or mix everything for exam revision. Your best score per set is remembered in this browser.</p>
+    <p class="lede">All 42 level questions plus 360 group-work questions (six 10-question quizzes for each of the six groups), each with an explanation. Pick a set, or mix everything for exam revision. Your best score per set is remembered in this browser.</p>
   </header>
   <div class="prose">
     <div class="seg" role="group" aria-label="Question set" id="sets" style="margin-top:1.4rem">
@@ -31,6 +31,7 @@
       <button type="button" data-s="g5">Group 5 · Validation</button>
       <button type="button" data-s="g6">Group 6 · SCOOT vs others</button>
     </div>
+    <div class="seg" role="group" aria-label="Quiz number" id="qnums" style="margin-top:8px" hidden></div>
     <div class="quiz" id="qz"></div>
   </div>
 </main>
@@ -39,14 +40,23 @@
 <script src="js/common.js"></script>
 <script>
   const el = document.getElementById('qz');
+  let qn = 1;
   function load(s) {
-    let qs = s[0] === 'g' ? GROUPQUIZ[s.slice(1)].qs : s === 'mixed' ? [...QUIZ.foundation, ...QUIZ.advanced, ...QUIZ.mastery].sort(() => Math.random() - 0.5).slice(0, 20) : QUIZ[s];
-    Quiz(el, qs, 'bank-' + s);
+    let qs = s[0] === 'g' ? (GROUPQUIZ[s.slice(1)].quizzes.find(z => z.n === qn) || GROUPQUIZ[s.slice(1)].quizzes[0]).qs : s === 'mixed' ? [...QUIZ.foundation, ...QUIZ.advanced, ...QUIZ.mastery].sort(() => Math.random() - 0.5).slice(0, 20) : QUIZ[s];
+    Quiz(el, qs, 'bank-' + s + (s[0] === 'g' ? '_' + qn : ''));
   }
-  const all = document.querySelectorAll('#sets button, #gsets button');
-  const choose = s => { all.forEach(x => x.setAttribute('aria-pressed', x.dataset.s === s)); load(s); };
+  const all = document.querySelectorAll('#sets button, #gsets button'), nums = document.getElementById('qnums');
+  let cur = 'foundation';
+  function numbar(s) {
+    if (s[0] !== 'g') { nums.hidden = true; return; }
+    nums.hidden = false;
+    nums.innerHTML = GROUPQUIZ[s.slice(1)].quizzes.map(z => `<button type="button" data-n="${z.n}" aria-pressed="${z.n === qn}">Quiz ${z.n} · ${z.title}</button>`).join('');
+    nums.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { qn = +b.dataset.n; numbar(cur); load(cur); }));
+  }
+  const choose = s => { cur = s; all.forEach(x => x.setAttribute('aria-pressed', x.dataset.s === s)); numbar(s); load(s); };
   all.forEach(b => b.addEventListener('click', () => choose(b.dataset.s)));
-  const want = new URLSearchParams(location.search).get('set');
+  const prm = new URLSearchParams(location.search), want = prm.get('set');
+  qn = Math.max(1, Math.min(6, +prm.get('quiz') || 1));
   choose(want && [...all].some(b => b.dataset.s === want) ? want : 'foundation');
 </script>
 </body>

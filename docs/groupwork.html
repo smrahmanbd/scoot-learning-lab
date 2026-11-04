@@ -47,6 +47,9 @@
   .q details.gq summary { color: var(--c); }
   :root[data-theme="dark"] .q details.gq summary { color: var(--fg); }
   .q .quiz { margin-top: 10px; }
+  .qtabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .qtabs button { font: 600 .9rem var(--body); border: 1.5px solid var(--c); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+  .qtabs button[aria-pressed="true"] { background: var(--c); color: #fff; }
   .teacher { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: .6rem 0 0; }
 </style>
 </head>
@@ -80,7 +83,7 @@
         <div class="ans"><ul><li><b>Split</b> = how the green is shared between stages. <b>Cycle</b> = time to run all stages once. <b>Offset</b> = timing between neighbouring junctions.</li><li>SCOOT tries a small change before every stage change (split), once per cycle (offset) and every 5 minutes (cycle).</li><li>Decisions per hour: 120 split + 60 offset + 12 cycle = <b>about 192</b>.</li><li>Each nudge is a few seconds, so one wrong guess cannot do much harm; together they follow the traffic, like a thermostat.</li></ul>
           <div><img src="animations/SCOOT_06_split_optimiser.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>≈ 192</b>timing decisions per hour at one junction</div>
           <div class="discuss"><b>Discuss</b>Ask: why not just pick the best plan once each morning? (Traffic changes minute by minute; a stored plan is out of date by the time the peak arrives.)</div></div></div></details>
-      <details class="gq" data-g="1"><summary>Group 1 quiz · 10 questions</summary><div class="quiz" id="gq1"></div></details>
+      <details class="gq" data-g="1"><summary>Group 1 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt1" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq1"></div></details>
     </div>
   </section>
   <section class="q" id="g2" style="--c:#04505A">
@@ -95,7 +98,7 @@
         <div class="ans"><ul><li>The loop sits just after the <b>upstream</b> junction, so SCOOT learns about cars <b>10–20 s</b> before they reach the stop line and can get the green ready.</li><li>An <b>LPU</b> (link profile unit) mixes a count with how long the loop is covered: LPU = 1 × vehicle + 2 × seconds covered.</li><li>Car: (4.5 + 2) ÷ 13.5 = 0.48 s → <b>1.96 LPU</b>. Bus: (12 + 2) ÷ 13.5 = 1.04 s → <b>3.07 LPU</b>.</li><li>Long or slow vehicles cover the loop longer and need more green, so they score more.</li></ul>
           <div><img src="animations/SCOOT_02_LPU_car_vs_bus.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>1.96 vs 3.07</b>LPUs for a car and a bus</div>
           <div class="discuss"><b>Discuss</b>Ask: what happens to a car’s LPU if it crawls over the loop in a jam? (Covered longer, more LPUs: an early sign of congestion.)</div></div></div></details>
-      <details class="gq" data-g="2"><summary>Group 2 quiz · 10 questions</summary><div class="quiz" id="gq2"></div></details>
+      <details class="gq" data-g="2"><summary>Group 2 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt2" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq2"></div></details>
     </div>
   </section>
   <section class="q" id="g3" style="--c:#2F5A1C">
@@ -110,7 +113,7 @@
         <div class="ans"><ul><li>A cyclic flow profile is the LPUs seen in each second of the cycle, averaged over several cycles.</li><li>Shift: the fastest drivers lead, so arrivals start at 0.8 × T = <b>8 s</b> (T = 10 s cruise time).</li><li>Smear: each second, <b>26%</b> of the new traffic arrives and <b>74%</b> of last second’s arrivals carry over (F = 1 ÷ (1 + 0.35 × 0.8 × 10) = 0.263).</li><li>Same 10 LPU, lower peak (0.95), about 25 s long. Longer road → smaller F (T = 20 s gives 0.15) → more spread.</li></ul>
           <div><img src="animations/SCOOT_12_dispersion_recipe.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>F = 0.263</b>share of each second’s traffic that arrives first</div>
           <div class="discuss"><b>Discuss</b>Ask: on a long road, does coordinating the two signals still help much? (Less: the platoon has smeared into steady flow.)</div></div></div></details>
-      <details class="gq" data-g="3"><summary>Group 3 quiz · 10 questions</summary><div class="quiz" id="gq3"></div></details>
+      <details class="gq" data-g="3"><summary>Group 3 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt3" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq3"></div></details>
     </div>
   </section>
   <section class="q" id="g4" style="--c:#8F3520">
@@ -125,7 +128,7 @@
         <div class="ans"><ul><li>SCOOT <b>models</b> the queue from the upstream counts: arrivals are the tap, red is the plug, and SATO is the size of the plughole.</li><li>End of red: 0.2 × 35 = <b>7 LPU</b>. In green it shrinks at 0.6 − 0.2 = 0.4 LPU/s, so it clears after 7 ÷ 0.4 = <b>17.5 s</b>.</li><li>DoS = demand ÷ what the green can clear = (0.2 × 60) ÷ (25 × 0.6) = 12 ÷ 15 = <b>0.80</b>.</li><li>Aiming for about 90% leaves a margin for random surges. Above 100% the queue grows every cycle.</li></ul>
           <div><img src="animations/SCOOT_15_degree_of_saturation.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>DoS 0.80</b>under the 90% target: spare green</div>
           <div class="discuss"><b>Discuss</b>Ask: if this link has spare green, where should SCOOT give it? (To the busiest stage at the junction, a few seconds at a time.)</div></div></div></details>
-      <details class="gq" data-g="4"><summary>Group 4 quiz · 10 questions</summary><div class="quiz" id="gq4"></div></details>
+      <details class="gq" data-g="4"><summary>Group 4 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt4" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq4"></div></details>
     </div>
   </section>
   <section class="q" id="g5" style="--c:#7A4412">
@@ -140,7 +143,7 @@
         <div class="ans"><ul><li><b>SATO</b> is how fast a standing queue drains in green, in LPU per second. It depends on lane width, gradient, turning traffic and parking.</li><li>The street is always right. SATO = queue ÷ (clear time − start lag) = 19.5 ÷ (36 − 3) = <b>0.59 LPU/s</b> (the model had 0.67).</li><li>Other settings: journey (cruise) time, start and end lags, and the maximum queue clear time.</li><li>Like tuning a guitar: a well-built model still plays wrong notes until it is tuned to the street.</li></ul>
           <div><img src="animations/SCOOT_14_validation_SATO.gif" alt="Animation for the answer" loading="lazy"><div class="key"><b>0.59 LPU/s</b>SATO after tuning (was 0.67)</div>
           <div class="discuss"><b>Discuss</b>Ask: what goes wrong if SATO is set too high? (The model thinks queues clear sooner, so SCOOT gives too little green and real queues grow.)</div></div></div></details>
-      <details class="gq" data-g="5"><summary>Group 5 quiz · 10 questions</summary><div class="quiz" id="gq5"></div></details>
+      <details class="gq" data-g="5"><summary>Group 5 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt5" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq5"></div></details>
     </div>
   </section>
   <section class="q" id="g6" style="--c:#5A2F38">
@@ -155,7 +158,7 @@
         <div class="ans"><ul><li><b>Fixed time</b> follows a stored plan. <b>Actuated</b> extends the green while cars keep arriving at the stop line. <b>SCOOT</b> predicts from upstream and coordinates junctions.</li><li>Lab F3, one junction: 18.96 / 14.48 / <b>12.79 s</b> mean delay, so SCOOT has 33% less delay than fixed time and 12% less than actuation.</li><li>Not always: in the four-junction corridor run, actuation had slightly less delay (29.1 vs 30.4 s), while SCOOT had fewer stops and much less bus delay.</li><li>A simple controller can be enough at isolated, lightly used junctions. SCOOT needs working detectors and a validated model.</li></ul>
           <div><p style="margin:0;font-weight:600">Lab F3: mean delay (s/veh)</p><div class="bars"><div><span>Fixed time</span><span class="bar" style="width:100%;background:#A34B12"></span><span>18.96</span></div><div><span>Actuated</span><span class="bar" style="width:76%;background:#7A4F9A"></span><span>14.48</span></div><div><span>SCOOT</span><span class="bar" style="width:67%;background:#23704A"></span><span>12.79</span></div></div><div class="key"><b>12.79 s</b>SCOOT mean delay in Lab F3 (fixed 18.96)</div>
           <div class="discuss"><b>Discuss</b>Ask: which number matters most to you as an engineer: delay, stops, or bus delay? Why?</div></div></div></details>
-      <details class="gq" data-g="6"><summary>Group 6 quiz · 10 questions</summary><div class="quiz" id="gq6"></div></details>
+      <details class="gq" data-g="6"><summary>Group 6 quizzes · 6 quizzes × 10 questions</summary><div class="qtabs" id="gqt6" role="group" aria-label="Choose a quiz"></div><div class="quiz" id="gq6"></div></details>
     </div>
   </section>
   <section class="prose" style="max-width:none"><h2 id="fundamentals">Fundamentals for every group</h2>
@@ -208,7 +211,12 @@
     document.querySelectorAll('details.gq').forEach(function (d) {
       d.addEventListener('toggle', function () {
         if (!d.open || d.dataset.ready) return; d.dataset.ready = 1;
-        var g = d.dataset.g; Quiz(document.getElementById('gq' + g), GROUPQUIZ[g].qs, 'gq' + g);
+        var g = d.dataset.g, tabs = document.getElementById('gqt' + g), el = document.getElementById('gq' + g);
+        var qz = GROUPQUIZ[g].quizzes;
+        tabs.innerHTML = qz.map(function (z, i) { return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === 0) + '">Quiz ' + z.n + ' · ' + z.title + '</button>'; }).join('');
+        function show(i) { tabs.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', +b.dataset.i === i); }); Quiz(el, qz[i].qs, 'gq' + g + '_' + qz[i].n); }
+        tabs.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { show(+b.dataset.i); }); });
+        show(0);
       });
     });
   })();
