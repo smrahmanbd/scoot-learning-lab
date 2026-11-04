@@ -13,7 +13,7 @@
 <main class="wrap">
   <header class="level-head prose">
     <h1>Quiz bank</h1>
-    <p class="lede">All 42 questions with explanations. Pick a level, or mix everything for exam revision. Your best score per set is remembered in this browser.</p>
+    <p class="lede">All 42 level questions plus 60 group-work questions (ten per group), each with an explanation. Pick a set, or mix everything for exam revision. Your best score per set is remembered in this browser.</p>
   </header>
   <div class="prose">
     <div class="seg" role="group" aria-label="Question set" id="sets" style="margin-top:1.4rem">
@@ -22,21 +22,32 @@
       <button type="button" data-s="mastery">Mastery</button>
       <button type="button" data-s="mixed">Mixed exam (20)</button>
     </div>
+    <p class="muted" style="margin:.8rem 0 .3rem;font-size:.95rem">Group work (<a href="groupwork.html">questions</a> · <a href="materials/SCOOT_Group_Quizzes.pdf" download>printable PDF</a>)</p>
+    <div class="seg" role="group" aria-label="Group quiz" id="gsets">
+      <button type="button" data-s="g1">Group 1 · Small nudges</button>
+      <button type="button" data-s="g2">Group 2 · Detectors &amp; LPUs</button>
+      <button type="button" data-s="g3">Group 3 · Platoons</button>
+      <button type="button" data-s="g4">Group 4 · Queue &amp; DoS</button>
+      <button type="button" data-s="g5">Group 5 · Validation</button>
+      <button type="button" data-s="g6">Group 6 · SCOOT vs others</button>
+    </div>
     <div class="quiz" id="qz"></div>
   </div>
 </main>
 <script src="js/quizdata.js"></script>
+<script src="js/groupquiz.js"></script>
 <script src="js/common.js"></script>
 <script>
   const el = document.getElementById('qz');
   function load(s) {
-    let qs = s === 'mixed' ? [...QUIZ.foundation, ...QUIZ.advanced, ...QUIZ.mastery].sort(() => Math.random() - 0.5).slice(0, 20) : QUIZ[s];
+    let qs = s[0] === 'g' ? GROUPQUIZ[s.slice(1)].qs : s === 'mixed' ? [...QUIZ.foundation, ...QUIZ.advanced, ...QUIZ.mastery].sort(() => Math.random() - 0.5).slice(0, 20) : QUIZ[s];
     Quiz(el, qs, 'bank-' + s);
   }
-  document.querySelectorAll('#sets button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('#sets button').forEach(x => x.setAttribute('aria-pressed', x === b)); load(b.dataset.s);
-  }));
-  load('foundation');
+  const all = document.querySelectorAll('#sets button, #gsets button');
+  const choose = s => { all.forEach(x => x.setAttribute('aria-pressed', x.dataset.s === s)); load(s); };
+  all.forEach(b => b.addEventListener('click', () => choose(b.dataset.s)));
+  const want = new URLSearchParams(location.search).get('set');
+  choose(want && [...all].some(b => b.dataset.s === want) ? want : 'foundation');
 </script>
 </body>
 </html>
