@@ -12,7 +12,7 @@ for **Eclipse SUMO**.
 | **2 Advanced** | split optimiser (temporary / permanent), offset optimiser and PI, cycle optimiser and critical node, double cycling, congestion importance, gating, bus extensions and recalls, ASTRID, INGRID, versions | split explorer, offset PI curve, cycle optimiser through a peak, gating, priority planner | `01_corridor_scoot`, `02_ablation_study` |
 | **3 Mastery** | research directions with implementations | CV sampling, split agent you train in the browser, pressure-aware split rule, detector faults, stop weight | `01_cv_lpu`, `02_rl_split_optimiser`, `03_maxpressure`, `04_loop_faults_astrid`, `05_emissions_stop_weight`, `06_glosa_prediction` |
 
-Plus **14 SCOOT animations** ([animations page](https://smrahmanbd.github.io/scoot-learning-lab/animations.html)), a **group-work page** with six class questions and answers ([group work](https://smrahmanbd.github.io/scoot-learning-lab/groupwork.html)), a **42-question quiz bank** plus **six 10-question quizzes for each of the six groups** (basics, key words, calculations, what-if, everyday pictures, exam challenge: 360 questions) (interactive on the group-work and quiz pages, and as a printable PDF with answers: [SCOOT_Group_Quizzes.pdf](docs/materials/SCOOT_Group_Quizzes.pdf)) with explanations and an interactive **mind map** of the main SCOOT ideas (icons, animations, memory pictures and a quiz mode).
+Plus a **design workshop deck** (designing SCOOT for a town in seven steps, 14 practical design questions, a junction simulation and 21 references), **20 SCOOT animations** ([animations page](https://smrahmanbd.github.io/scoot-learning-lab/animations.html)), a **group-work page** with six class questions and answers ([group work](https://smrahmanbd.github.io/scoot-learning-lab/groupwork.html)), a **42-question quiz bank** plus **six 10-question quizzes for each of the six groups** (basics, key words, calculations, what-if, everyday pictures, exam challenge: 360 questions) (interactive on the group-work and quiz pages, and as a printable PDF with answers: [SCOOT_Group_Quizzes.pdf](docs/materials/SCOOT_Group_Quizzes.pdf)) with explanations and an interactive **mind map** of the main SCOOT ideas (icons, animations, memory pictures and a quiz mode).
 
 ## Study guides and slides
 
@@ -23,6 +23,7 @@ The Foundation slides open with a **group investigation**: nine fundamentals sli
 | Level | Study guide | Slides |
 |---|---|---|
 | Foundation | [SCOOT_Foundation_Study_Guide.pdf](docs/materials/SCOOT_Foundation_Study_Guide.pdf) | [SCOOT_Foundation_Presentation.pptx](docs/materials/SCOOT_Foundation_Presentation.pptx) |
+| Foundation · Design workshop | (slides only) | [SCOOT_Design_Presentation.pptx](docs/materials/SCOOT_Design_Presentation.pptx) · [PDF](docs/materials/SCOOT_Design_Presentation.pdf) |
 | Advanced | [SCOOT_Advanced_Study_Guide.pdf](docs/materials/SCOOT_Advanced_Study_Guide.pdf) | [SCOOT_Advanced_Presentation.pptx](docs/materials/SCOOT_Advanced_Presentation.pptx) |
 | Mastery | [SCOOT_Mastery_Study_Guide.pdf](docs/materials/SCOOT_Mastery_Study_Guide.pdf) | [SCOOT_Mastery_Presentation.pptx](docs/materials/SCOOT_Mastery_Presentation.pptx) |
 
