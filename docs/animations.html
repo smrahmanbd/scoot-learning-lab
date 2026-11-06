@@ -26,7 +26,7 @@
 <main class="wrap">
   <header class="level-head prose">
     <h1>SCOOT in animations</h1>
-    <p class="lede">Fourteen short, looping animations that build SCOOT up one idea at a time, in lecture order. Each has a plain-language explanation and the numbers to look for. The same GIFs play in the slides and in PowerPoint: right-click to save any of them.</p>
+    <p class="lede">Twenty short, looping animations (14 on how SCOOT works, 6 on designing a scheme) that build SCOOT up one idea at a time, in lecture order. Each has a plain-language explanation and the numbers to look for. The same GIFs play in the slides and in PowerPoint: right-click to save any of them.</p>
   </header>
   <nav aria-label="Animations"><ol class="anim-toc">
     <li><a href="#elastic">1 · Small nudges, all morning</a></li>
@@ -43,6 +43,12 @@
     <li><a href="#cycle">12 · Longer cycles for the peak</a></li>
     <li><a href="#validate">13 · Tuning the model to the street</a></li>
     <li><a href="#versus">14 · Fixed time, actuated and SCOOT</a></li>
+    <li><a href="#d-steps">15 · The seven design steps</a></li>
+    <li><a href="#d-survey">16 · Measuring the saturation flow</a></li>
+    <li><a href="#d-regions">17 · Dividing the town into regions</a></li>
+    <li><a href="#d-loops">18 · Where should the loop go?</a></li>
+    <li><a href="#d-utc">19 · Wiring it up</a></li>
+    <li><a href="#d-sim">20 · One busy junction: old plan vs SCOOT-style plan</a></li>
   </ol></nav>
   <section class="prose anim" id="elastic">
     <p class="lvl">Foundation · the elastic plan</p>
@@ -141,6 +147,48 @@
     <p>Fixed time follows a stored plan; actuated signals extend the green while cars keep arriving at the stop line; SCOOT predicts from upstream and adapts gently. Same junction, same cars, one simulated hour in SUMO (Lab F3).</p>
     <figure><img src="animations/SCOOT_16_fixed_actuated_scoot.gif" alt="Animation: Queues and mean delay build up over one simulated hour." loading="lazy" width="1040" height="375"><figcaption>Queues and mean delay build up over one simulated hour.</figcaption></figure>
     <p class="keys">Mean delay: fixed <b>18.96 s</b>, actuated <b>14.48 s</b>, SCOOT <b>12.79 s</b> (33% less than fixed, 12% less than actuated).</p>
+  </section>
+  <section class="prose anim" id="d-steps">
+    <p class="lvl">Design · overview</p>
+    <h2><span class="num">15</span>The seven design steps</h2>
+    <p>From 'is it worth it?' to switch-on day. Each step hands something to the next: a before study, a network inventory, regions, loop drawings, a database, a validated model and an after study.</p>
+    <figure><img src="animations/SCOOT_17_design_steps.gif" alt="Animation: Seven milestones light up in order; the last banner is a reminder that monitoring never stops." loading="lazy" width="1040" height="375"><figcaption>Seven milestones light up in order; the last banner is a reminder that monitoring never stops.</figcaption></figure>
+    <p class="keys">Feasibility → survey → regions → detectors → UTC &amp; data → validation → commissioning.</p>
+  </section>
+  <section class="prose anim" id="d-survey">
+    <p class="lvl">Design · step 2 survey</p>
+    <h2><span class="num">16</span>Measuring the saturation flow</h2>
+    <p>Stand at the stop line with a stopwatch. Start when the first queued vehicle crosses, stop when the 16th crosses: 15 gaps.</p>
+    <figure><img src="animations/SCOOT_18_saturation_survey.gif" alt="Animation: A queue of 18 cars discharges at 2 s spacing after a 2 s start lag." loading="lazy" width="1040" height="375"><figcaption>A queue of 18 cars discharges at 2 s spacing after a 2 s start lag.</figcaption></figure>
+    <p class="keys">s = 15 ÷ 30 s = <b>0.5 veh/s = 1800 veh/h per lane</b>.</p>
+  </section>
+  <section class="prose anim" id="d-regions">
+    <p class="lvl">Design · step 3 regions</p>
+    <h2><span class="num">17</span>Dividing the town into regions</h2>
+    <p>Each node needs its own cycle for 90% saturation. The busiest (critical) node sets the cycle for its region; a long link makes a natural boundary; crossings can double-cycle.</p>
+    <figure><img src="animations/SCOOT_19_regions.gif" alt="Animation: Ten nodes, their needed cycles, two regions and double-cycled crossings." loading="lazy" width="1040" height="375"><figcaption>Ten nodes, their needed cycles, two regions and double-cycled crossings.</figcaption></figure>
+    <p class="keys">C = 0.9L ÷ (0.9 − Y): J3 needs <b>60 s</b>, J6 <b>90 s</b>; the 900 m link (≈ 68 s) splits them.</p>
+  </section>
+  <section class="prose anim" id="d-loops">
+    <p class="lvl">Design · step 4 detectors</p>
+    <h2><span class="num">18</span>Where should the loop go?</h2>
+    <p>Count back from the stop line in seconds of driving, not metres. Under about 6 s is too late; 8–15 s is ideal. One 2 m loop covers at most two lanes.</p>
+    <figure><img src="animations/SCOOT_20_detector_siting.gif" alt="Animation: Red, amber and green zones on a 48 km/h link; two loops at 180 m." loading="lazy" width="1040" height="375"><figcaption>Red, amber and green zones on a 48 km/h link; two loops at 180 m.</figcaption></figure>
+    <p class="keys">180 m ÷ 13.3 m/s = <b>13.5 s</b>, inside the 8–15 s zone.</p>
+  </section>
+  <section class="prose anim" id="d-utc">
+    <p class="lvl">Design · step 5 UTC &amp; database</p>
+    <h2><span class="num">19</span>Wiring it up</h2>
+    <p>Loops feed an outstation in the signal cabinet, which talks to the UTC computer running the SCOOT model; timings travel back to the controller. Each link gets a database record.</p>
+    <figure><img src="animations/SCOOT_21_utc_wiring.gif" alt="Animation: Readings flow up, timings flow down, and one link's record fills in." loading="lazy" width="1040" height="375"><figcaption>Readings flow up, timings flow down, and one link's record fills in.</figcaption></figure>
+    <p class="keys">36 loops × 4 readings/s = <b>144 readings/s</b>; N3A journey time 13.5 s, max queue clear 62 s.</p>
+  </section>
+  <section class="prose anim" id="d-sim">
+    <p class="lvl">Design · simulation</p>
+    <h2><span class="num">20</span>One busy junction: old plan vs SCOOT-style plan</h2>
+    <p>A 90-minute morning simulated second by second (simplified teaching model). The old 70 s plan never changes; the elastic plan moves splits a few seconds per cycle and reviews the cycle every few minutes.</p>
+    <figure><img src="animations/SCOOT_22_junction_simulation.gif" alt="Animation: Queues, cycle, split and delay for both plans, with the demand curve below." loading="lazy" width="1040" height="375"><figcaption>Queues, cycle, split and delay for both plans, with the demand curve below.</figcaption></figure>
+    <p class="keys">Delay <b>15.8 → 10.7 veh·h</b>; mean <b>20.2 → 13.6 s</b> per vehicle (one junction; networks typically gain 12–20%).</p>
   </section>
   <p class="prose muted">Want to try these yourself? The <a href="foundation.html">Foundation</a> and <a href="advanced.html">Advanced</a> pages have interactive versions, and the <a href="groupwork.html">group work</a> page turns them into class questions.</p>
 </main>
