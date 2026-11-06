@@ -48,7 +48,7 @@
           else { box.style.height = ''; box.style.aspectRatio = '16/10.6'; }
         }
         tabs.forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.mode); }); });
-        document.querySelectorAll('[data-open]').forEach(function (a) { a.addEventListener('click', function () { pick(a.dataset.open); }); });
+        document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('[data-open]'); if (a) pick(a.dataset.open); });
       })();
       </script>
     </section>
