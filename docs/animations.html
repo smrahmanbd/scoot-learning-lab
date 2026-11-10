@@ -26,7 +26,7 @@
 <main class="wrap">
   <header class="level-head prose">
     <h1>SCOOT in animations</h1>
-    <p class="lede">Twenty short, looping animations (14 on how SCOOT works, 6 on designing a scheme) that build SCOOT up one idea at a time, in lecture order. Each has a plain-language explanation and the numbers to look for. The same GIFs play in the slides and in PowerPoint: right-click to save any of them.</p>
+    <p class="lede">Twenty short, looping animations (14 on how SCOOT works, 6 on designing a scheme) that build SCOOT up one idea at a time, in lecture order, plus a beginner recap that joins animations 4, 6 and 7 into one story. Each has a plain-language explanation and the numbers to look for. The same GIFs play in the slides and in PowerPoint: right-click to save any of them.</p>
   </header>
   <nav aria-label="Animations"><ol class="anim-toc">
     <li><a href="#elastic">1 · Small nudges, all morning</a></li>
@@ -36,6 +36,7 @@
     <li><a href="#spread">5 · The platoon spreads out</a></li>
     <li><a href="#recipe">6 · Robertson’s recipe, one second at a time</a></li>
     <li><a href="#queue">7 · The queue is a bathtub</a></li>
+    <li><a href="#story">4 + 6 + 7 · The whole story, for beginners</a></li>
     <li><a href="#sato">8 · How fast a queue drains</a></li>
     <li><a href="#dos">9 · Is the green big enough?</a></li>
     <li><a href="#split">10 · The split optimiser tries three options</a></li>
@@ -98,6 +99,13 @@
     <p>Arrivals are a tap that never stops. During red the plug is in, so the queue grows. During green the plughole drains it at the saturation occupancy (SATO). SCOOT never sees this queue: it models it from the upstream counts.</p>
     <figure><img src="animations/SCOOT_05_queue_bathtub.gif" alt="Animation: Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start." loading="lazy" width="1040" height="375"><figcaption>Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start.</figcaption></figure>
     <p class="keys">End of red: <b>7 LPU</b>. It drains at 0.6 − 0.2 = 0.4 LPU/s and clears <b>17.5 s</b> into green. Delay = shaded area = <b>183.75 LPU·s</b>.</p>
+  </section>
+  <section class="prose anim" id="story">
+    <p class="lvl">Beginner recap · animations 4, 6 and 7 together</p>
+    <h2><span class="num">★</span>From counted cars to a predicted queue</h2>
+    <p>SCOOT never sees the queue at the stop line. This animation puts three earlier ideas in a row, so you can watch them work together on one road. <b>1. Remember:</b> the loop counts cars every second, and SCOOT blends each noisy cycle into a memory of the usual pattern (animation 4). <b>2. Spread:</b> it shifts that pattern about 8 s down the road and smooths it, because fast and slow drivers drift apart (animation 6). <b>3. Queue:</b> those predicted arrivals pour into a bathtub that fills on red and drains on green (animation 7).</p>
+    <figure><img src="animations/SCOOT_23_queue_story_beginner.gif" alt="Animation: One road from the detector loop to the stop line. Step 1 builds the cyclic flow profile over five cycles, step 2 turns it into predicted stop-line arrivals second by second, and step 3 fills and drains the queue like a bathtub." loading="lazy" width="1040" height="585"><figcaption>One road, three steps: remember the pattern, predict the spread, model the queue. About 1.5 minutes, then it loops.</figcaption></figure>
+    <p class="keys">Memory = <b>¾</b> old + <b>¼</b> new · arrivals = <b>0.26</b> × seen 8 s earlier + <b>0.74</b> × carried over · the bunch lands on red: <b>10.9 LPU</b> queue, empty <b>16 s</b> into green, <b>307 LPU·s</b> of waiting. Starting the green 22 s later cuts that to about <b>72 LPU·s</b>: the job of the offset optimiser (animation 11). Illustrative numbers: 60 s cycle, red and green 30 s each, SATO 0.8 LPU/s.</p>
   </section>
   <section class="prose anim" id="sato">
     <p class="lvl">Foundation · saturation occupancy</p>
