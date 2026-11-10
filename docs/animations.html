@@ -37,6 +37,7 @@
     <li><a href="#spread">5 · The platoon spreads out</a></li>
     <li><a href="#recipe">6 · Robertson’s recipe, one second at a time</a></li>
     <li><a href="#queue">7 · The queue is a bathtub</a></li>
+    <li><a href="#chain">6 + 7 · From arrivals to queue</a></li>
     <li><a href="#story">4 + 6 + 7 · The whole story, for beginners</a></li>
     <li><a href="#sato">8 · How fast a queue drains</a></li>
     <li><a href="#dos">9 · Is the green big enough?</a></li>
@@ -107,6 +108,13 @@
     <p>Arrivals are a tap that never stops. During red the plug is in, so the queue grows. During green the plughole drains it at the saturation occupancy (SATO). SCOOT never sees this queue: it models it from the upstream counts.</p>
     <figure><img src="animations/SCOOT_05_queue_bathtub.gif" alt="Animation: Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start." loading="lazy" width="1040" height="375"><figcaption>Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start.</figcaption></figure>
     <p class="keys">End of red: <b>7 LPU</b>. It drains at 0.6 − 0.2 = 0.4 LPU/s and clears <b>17.5 s</b> into green. Delay = shaded area = <b>183.75 LPU·s</b>.</p>
+  </section>
+  <section class="prose anim" id="chain">
+    <p class="lvl">Beginner link · animations 6 and 7 together</p>
+    <h2><span class="num">6+7</span>From arrivals to queue, one second at a time</h2>
+    <p>Animations 6 and 7 are two halves of one calculation. Every second, Robertson’s recipe (6) works out how many LPU reach the stop line, and those arrivals are the bathtub’s tap (7). Red holds them in the queue; green lets them drain away. The bottom line of the animation shows both small sums for each second, and at the end the same arrivals are replayed with an earlier green.</p>
+    <figure><img src="animations/SCOOT_24_recipe_to_queue.gif" alt="Animation: Left, Robertson's recipe turns 10 LPU counted at the loop into arrivals at the stop line second by second; right, those arrivals pour into a bathtub that fills on red and drains on green." loading="lazy" width="1040" height="585"><figcaption>Left: step 6 predicts the arrivals. Right: step 7 turns them into a queue. Then the same arrivals meet an earlier green.</figcaption></figure>
+    <p class="keys">Each second: arrival = <b>0.26</b> × (loop count 8 s earlier) + <b>0.74</b> × (last second’s arrival); queue = queue before + arrival − departures (<b>0</b> on red, up to <b>1 LPU/s</b> on green). Red until second 14: queue peaks at <b>6.8 LPU</b>, <b>58 LPU·s</b> of waiting. Green from second 10: <b>2.8 LPU</b>, <b>19 LPU·s</b>. Illustrative numbers.</p>
   </section>
   <section class="prose anim" id="story">
     <p class="lvl">Beginner recap · animations 4, 6 and 7 together</p>
