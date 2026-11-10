@@ -108,6 +108,19 @@
     <p>Arrivals are a tap that never stops. During red the plug is in, so the queue grows. During green the plughole drains it at the saturation occupancy (SATO). SCOOT never sees this queue: it models it from the upstream counts.</p>
     <figure><img src="animations/SCOOT_05_queue_bathtub.gif" alt="Animation: Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start." loading="lazy" width="1040" height="375"><figcaption>Arrivals 0.2 LPU/s, red 35 s, green 25 s, SATO 0.6 LPU/s, no queue at the start.</figcaption></figure>
     <p class="keys">End of red: <b>7 LPU</b>. It drains at 0.6 − 0.2 = 0.4 LPU/s and clears <b>17.5 s</b> into green. Delay = shaded area = <b>183.75 LPU·s</b>.</p>
+    <h3>The calculation, step by step</h3>
+    <p>Every second the queue changes by <b>arrivals in − departures out</b>. On red nothing leaves, so the queue rises at the arrival rate. On green it leaves at SATO, but cars keep arriving, so it falls at <b>arrivals − SATO</b>. That is why the two sides of the triangle have different slopes.</p>
+    <figure><img src="animations/calc_07_queue_slopes.png" alt="Queue against time for animation 7: a straight rise at +0.2 LPU/s during 35 s of red to 7 LPU, then a steeper straight fall at −0.4 LPU/s that empties 17.5 s into green; the shaded triangle is 183.75 LPU·s of waiting." loading="lazy" width="1560" height="690"></figure>
+    <div class="table-scroll"><table class="data">
+      <tr><th>Step</th><th>Rule</th><th>Numbers</th><th>Result</th></tr>
+      <tr><td>1. Red: rising slope</td><td>slope = arrivals</td><td>0.2 LPU/s</td><td><b>+0.2 LPU/s</b></td></tr>
+      <tr><td>2. Queue at end of red</td><td>arrivals × red time</td><td>0.2 × 35</td><td><b>7 LPU</b></td></tr>
+      <tr><td>3. Green: falling slope</td><td>slope = arrivals − SATO</td><td>0.2 − 0.6</td><td><b>−0.4 LPU/s</b></td></tr>
+      <tr><td>4. Time to clear</td><td>queue ÷ net drain</td><td>7 ÷ 0.4</td><td><b>17.5 s</b> into green</td></tr>
+      <tr><td>5. Total waiting</td><td>area of triangle = ½ × height × base</td><td>½ × 7 × (35 + 17.5)</td><td><b>183.75 LPU·s</b></td></tr>
+      <tr><td>6. Average wait</td><td>waiting ÷ traffic in the cycle</td><td>183.75 ÷ (0.2 × 60)</td><td>about <b>15 s</b> per LPU</td></tr>
+    </table></div>
+    <p class="muted">If SATO were only 0.4 LPU/s, the falling slope would be 0.2 − 0.4 = −0.2, the queue would need 35 s to clear (longer than the 25 s green), and it would not empty before the next red.</p>
   </section>
   <section class="prose anim" id="chain">
     <p class="lvl">Beginner link · animations 6 and 7 together</p>
@@ -115,6 +128,29 @@
     <p>Animations 6 and 7 are two halves of one calculation. Every second, Robertson’s recipe (6) works out how many LPU reach the stop line, and those arrivals are the bathtub’s tap (7). Red holds them in the queue; green lets them drain away. The bottom line of the animation shows both small sums for each second, and at the end the same arrivals are replayed with an earlier green.</p>
     <figure><img src="animations/SCOOT_24_recipe_to_queue.gif" alt="Animation: Left, Robertson's recipe turns 10 LPU counted at the loop into arrivals at the stop line second by second; right, those arrivals pour into a bathtub that fills on red and drains on green." loading="lazy" width="1040" height="585"><figcaption>Left: step 6 predicts the arrivals. Right: step 7 turns them into a queue. Then the same arrivals meet an earlier green.</figcaption></figure>
     <p class="keys">Each second: arrival = <b>0.26</b> × (loop count 8 s earlier) + <b>0.74</b> × (last second’s arrival); queue = queue before + arrival − departures (<b>0</b> on red, up to <b>1 LPU/s</b> on green). Red until second 14: queue peaks at <b>6.8 LPU</b>, <b>58 LPU·s</b> of waiting. Green from second 10: <b>2.8 LPU</b>, <b>19 LPU·s</b>. Illustrative numbers.</p>
+    <h3>The calculation, step by step</h3>
+    <p>Here the arrivals change every second, so the slope changes every second too. On red, slope = that second’s arrival. On green, slope = arrival − 1 (SATO). The climb is steepest when the bunch arrives; the fall starts slowly because the tail of the bunch is still pouring in, then gets steeper as arrivals die away. That is why the curve is a hump, not a triangle.</p>
+    <figure><img src="animations/calc_67_queue_slopes.png" alt="Queue against time for animations 6 and 7: the queue rises fastest at second 12 (+1.57 LPU/s), peaks at 6.8 LPU at the end of red, falls slowly at first (−0.15 LPU/s at second 14) and faster later (−0.86 LPU/s at second 20), empty at second 23; a dashed line shows the smaller queue if the green starts at second 10." loading="lazy" width="1560" height="720"></figure>
+    <div class="table-scroll"><table class="data">
+      <tr><th>Second</th><th>Step 6: arrival = 0.26 × loop count 8 s earlier + 0.74 × last arrival</th><th>Light</th><th>Leaving</th><th>Slope</th><th>Step 7: queue = before + arrival − leaving</th></tr>
+<tr><td>8</td><td>0.26 × 2.0 + 0.74 × 0.00 = <b>0.53</b></td><td>red</td><td>0</td><td>+0.53</td><td>0.00 + 0.53 − 0 = <b>0.53</b></td></tr>
+<tr><td>9</td><td>0.26 × 2.0 + 0.74 × 0.53 = <b>0.91</b></td><td>red</td><td>0</td><td>+0.91</td><td>0.53 + 0.91 − 0 = <b>1.44</b></td></tr>
+<tr><td>10</td><td>0.26 × 2.0 + 0.74 × 0.91 = <b>1.20</b></td><td>red</td><td>0</td><td>+1.20</td><td>1.44 + 1.20 − 0 = <b>2.64</b></td></tr>
+<tr><td>11</td><td>0.26 × 2.0 + 0.74 × 1.20 = <b>1.41</b></td><td>red</td><td>0</td><td>+1.41</td><td>2.64 + 1.41 − 0 = <b>4.05</b></td></tr>
+<tr><td>12</td><td>0.26 × 2.0 + 0.74 × 1.41 = <b>1.57</b></td><td>red</td><td>0</td><td>+1.57</td><td>4.05 + 1.57 − 0 = <b>5.61</b></td></tr>
+<tr><td>13</td><td>0.26 × 0.0 + 0.74 × 1.57 = <b>1.15</b></td><td>red</td><td>0</td><td>+1.15</td><td>5.61 + 1.15 − 0 = <b>6.77</b></td></tr>
+<tr><td>14</td><td>0.26 × 0.0 + 0.74 × 1.15 = <b>0.85</b></td><td>green</td><td>1.00</td><td>-0.15</td><td>6.77 + 0.85 − 1.00 = <b>6.62</b></td></tr>
+<tr><td>15</td><td>0.26 × 0.0 + 0.74 × 0.85 = <b>0.63</b></td><td>green</td><td>1.00</td><td>-0.37</td><td>6.62 + 0.63 − 1.00 = <b>6.24</b></td></tr>
+<tr><td>16</td><td>0.26 × 0.0 + 0.74 × 0.63 = <b>0.46</b></td><td>green</td><td>1.00</td><td>-0.54</td><td>6.24 + 0.46 − 1.00 = <b>5.71</b></td></tr>
+<tr><td>17</td><td>0.26 × 0.0 + 0.74 × 0.46 = <b>0.34</b></td><td>green</td><td>1.00</td><td>-0.66</td><td>5.71 + 0.34 − 1.00 = <b>5.05</b></td></tr>
+<tr><td>18</td><td>0.26 × 0.0 + 0.74 × 0.34 = <b>0.25</b></td><td>green</td><td>1.00</td><td>-0.75</td><td>5.05 + 0.25 − 1.00 = <b>4.30</b></td></tr>
+<tr><td>19</td><td>0.26 × 0.0 + 0.74 × 0.25 = <b>0.18</b></td><td>green</td><td>1.00</td><td>-0.82</td><td>4.30 + 0.18 − 1.00 = <b>3.48</b></td></tr>
+<tr><td>20</td><td>0.26 × 0.0 + 0.74 × 0.18 = <b>0.14</b></td><td>green</td><td>1.00</td><td>-0.86</td><td>3.48 + 0.14 − 1.00 = <b>2.62</b></td></tr>
+<tr><td>21</td><td>0.26 × 0.0 + 0.74 × 0.14 = <b>0.10</b></td><td>green</td><td>1.00</td><td>-0.90</td><td>2.62 + 0.10 − 1.00 = <b>1.72</b></td></tr>
+<tr><td>22</td><td>0.26 × 0.0 + 0.74 × 0.10 = <b>0.07</b></td><td>green</td><td>1.00</td><td>-0.93</td><td>1.72 + 0.07 − 1.00 = <b>0.79</b></td></tr>
+<tr><td>23</td><td>0.26 × 0.0 + 0.74 × 0.07 = <b>0.05</b></td><td>green</td><td>0.85</td><td>-0.79</td><td>0.79 + 0.05 − 0.85 = <b>0.00</b></td></tr>
+    </table></div>
+    <p class="muted">Seconds 0–7: nothing has reached the stop line yet, so the queue is 0. Total waiting = sum of the queue over all seconds = <b>58 LPU·s</b>. With the green from second 10 the same sums give 19 LPU·s.</p>
   </section>
   <section class="prose anim" id="story">
     <p class="lvl">Beginner recap · animations 4, 6 and 7 together</p>
