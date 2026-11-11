@@ -30,6 +30,7 @@
   </header>
   <nav aria-label="Animations"><ol class="anim-toc">
     <li><a href="#all">▶ · All 21 in one animation</a></li>
+    <li><a href="#street3d">3D · Loop → platoon → queue on a street</a></li>
     <li><a href="#elastic">1 · Small nudges, all morning</a></li>
     <li><a href="#detect">2 · Counting cars far up the road</a></li>
     <li><a href="#lpu">3 · Why a bus counts more than a car</a></li>
@@ -59,6 +60,13 @@
     <p>Short on time, or want the big picture first? This single animation plays every animation below in lecture order, in three parts: <b>seeing the traffic</b> (1–7 and the beginner recap), <b>deciding the timings</b> (8–14) and <b>designing a scheme</b> (15–20). Each chapter opens with a title card, keeps its plain-language explanation and key numbers on screen, and a bar along the top shows how far through you are.</p>
     <figure><img src="animations/SCOOT_00_all_in_one.gif" alt="Animation: All 21 SCOOT animations in one, with part and chapter cards, explanations and a progress bar." loading="lazy" width="1280" height="720"><figcaption>All 21 animations in lecture order, about 9 minutes, then it loops. It is a large file (about 15 MB), so it may take a moment to load. <a href="animations/SCOOT_00_all_in_one.gif" download>Download the GIF</a>.</figcaption></figure>
     <p class="keys">Part 1: how SCOOT <b>sees</b> traffic · Part 2: how it <b>decides</b> the timings · Part 3: how a scheme is <b>designed</b>. Each chapter matches a section of this page.</p>
+  </section>
+  <section class="prose anim" id="street3d">
+    <p class="lvl">Interactive · a realistic 3D street</p>
+    <h2><span class="num">3D</span>Loop → platoon → queue on a real-looking street</h2>
+    <p>The same ideas as animations 2 and 4–7, on a simulated street you can fly around. Each car picks its own speed and follows the car in front, so the platoon spreads out and the queue forms and clears by itself. SCOOT sees only the detector loop: it builds the profile, applies Robertson’s recipe and predicts the queue, and the console draws that prediction over the real queue in the street. At the end of the guided tour, SCOOT starts moving the green to meet the platoon.</p>
+    <figure><a href="scoot3d.html"><img src="animations/scoot3d_poster.jpg" alt="A 3D street with a queue of cars at the stop line, and a console with charts of loop counts, predicted arrivals and the predicted and real queue." loading="lazy" width="1280" height="720"></a><figcaption><a href="scoot3d.html"><b>Open the 3D street</b></a> (runs in the browser; drag to orbit, scroll to zoom). Or watch the recorded tour: <a href="animations/SCOOT_3D_tour.mp4">MP4, about 2.7 minutes</a>.</figcaption></figure>
+    <p class="keys">Five cameras (overview, detector loop, follow the platoon, stop line, drone) · a six-step guided tour · a slider for the stop-line green · a button that lets SCOOT adjust the offset 4 s per cycle. In steady cycles SCOOT’s predicted waiting is within about 15% of the real waiting in the simulation. Illustrative simulation, not real SCOOT.</p>
   </section>
   <section class="prose anim" id="elastic">
     <p class="lvl">Foundation · the elastic plan</p>
