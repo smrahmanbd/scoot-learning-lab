@@ -231,6 +231,7 @@
     // close the cycle for the link model
     ['eb', 'wb', 'side'].forEach(k => {
       const L = n.links[k], g = (k === 'side' ? n.gB : n.planA) - 2, x = L.cyc / Math.max(1, L.stoc * g);
+      L.last = { lpu: L.cyc, g, x };
       L.dos = 0.5 * L.dos + 0.5 * Math.min(1.6, x); L.cyc = 0;
       const nb = Math.ceil(n.C / BIN); for (let b = 0; b < 30; b++) { L.prof[b] = b < nb ? 0.6 * L.prof[b] + 0.4 * L.cur[b] : 0; L.cur[b] = 0; }
     });

@@ -200,110 +200,138 @@
   const stopX = (j, k) => k === 'eb' ? JX[j] - 13 : JX[j] + 10;
   const modelVeh = (Wd, j, k) => { const L = Wd.nodes[j].links[k]; return L.q / Math.max(1.5, L.lpv); };
   let track = null, counts0 = null;
-  function pickTrack() { const vs = F.eb[0].veh.concat(F.eb[1].veh).filter(v => v.s > JX[0] + 40 && v.s < JX[0] + 75 && v.v > 6 && v.exit < 0); if (vs.length) track = { v: vs[0], t0: F.t, done: null }; }
+  function pickTrack(Wd) { const vs = Wd.eb[0].veh.concat(Wd.eb[1].veh).filter(v => v.s > JX[0] + 40 && v.s < JX[0] + 75 && v.v > 6 && v.exit < 0); track = vs.length ? { v: vs[0], t0: Wd.t, done: null, w: Wd } : null; }
   function vehXY(Wd, v) { return { x: v.s, y: v.lane.y + v.lat }; }
 
   // ---------------- the guided tour ----------------
   const STEPS7 = ['Nodes, links, stages', 'Detector location', 'Communications', 'Cycle time limits', 'Link validation', 'Extra facilities', 'Evaluation'];
+  const dosCol = x => x < 0.8 ? '#0d7a4c' : x < 0.95 ? '#a86a00' : '#b3352b';
+  const pct = x => (x >= 1.5 ? '>150' : Math.round(x * 100)) + '%';
+  // Degree of saturation on the street: one badge per approach when zoomed in, one per junction when zoomed out.
+  function dosBadges(Wd) {
+    Wd.nodes.forEach(n => {
+      const e = n.links.eb.dos, w = n.links.wb.dos, s = n.links.side.dos;
+      if (cam.z > 2.2) {
+        tag(n.x - 30, 5, 'DS ' + pct(e), { dy: 30, bg: dosCol(e), size: 12 }); tag(n.x + 28, -5, 'DS ' + pct(w), { dy: -30, bg: dosCol(w), size: 12 }); tag(n.x + 1.75, 34, 'DS ' + pct(s), { dx: 44, bg: dosCol(s), size: 12 });
+      } else { const m = Math.max(e, w, s); tag(n.x, 14, 'DS ' + pct(m), { dy: 26, bg: dosCol(m), size: 12 }); }
+    });
+  }
+  function stageTags(Wd, j) {
+    const n = Wd.nodes[j], st = n.stage, on = '#0d7a4c', off = '#5b6672';
+    tag(n.x - 40, -5, 'Stage 1 · main road, both directions', { dy: -34, bg: st === 'A' ? on : off });
+    tag(n.x + 1.75, 30, 'Stage 2 · side street, and people cross', { dx: 150, bg: st === 'B' ? '#1d6fb8' : off });
+    if (st !== 'A' && st !== 'B') tag(n.x, 0, 'Intergreen · 5 s to clear the junction', { bg: '#a86a00' });
+  }
   const chapters = [
-    { kicker: 'The street', title: 'A waterfront road with four signals', view: 'F', speed: 1.5, dur: 14,
-      steps: [[0, 'Sea on one side, city on the other. Four junctions with traffic signals, J1 to J4, sit along the road.', { x: 1000, y: 45, span: 2100 }],
-              [7, 'Today the signals follow a <b>fixed plan</b>: the same timings all day, whatever the traffic does.', { x: 640, y: 30, span: 1150 }]],
-      draw() { nodeNames(); } },
-    { kicker: 'Existing conditions', title: 'First, watch the street as it is', view: 'F', speed: 1, dur: 36,
-      enter() { counts0 = F.nodes[1].links.eb.vehTotal + '|' + F.nodes[1].links.wb.vehTotal + '|' + F.nodes[1].links.side.vehTotal; track = null; },
-      steps: [[0, 'Before choosing any equipment, engineers record how the street behaves today.', { x: JX[1] - 25, y: 6, span: 230 }],
-              [5, '<b>Count the traffic</b> on every approach. The counts show which junction is busiest.', { x: JX[1] - 25, y: 10, span: 250 }],
-              [12, '<b>Measure the queue</b> at red. Later, the detector must sit beyond the end of this queue.', { x: JX[1] - 60, y: 4, span: 240 }],
-              [20, '<b>Time a car</b> from the start of the link to the stop line. SCOOT needs this cruise time.', { x: (JX[0] + JX[1]) / 2, y: 4, span: 400 }],
-              [29, 'Note the <b>people crossing</b> and the <b>cars parked</b> at the kerb. Both limit what the signals can do.', { x: JX[1] - 30, y: 4, span: 170 }]],
+    { kicker: 'Before step 1', title: 'Existing conditions: watch the street as it is', out: 'counts, queue lengths, cruise times, crossing and parking notes', view: 'F', speed: 1, dur: 40, step: -1, done: 0,
+      enter() { counts0 = [F.nodes[1].links.eb.vehTotal, F.nodes[1].links.wb.vehTotal, F.nodes[1].links.side.vehTotal]; track = null; },
+      steps: [[0, 'A waterfront road with four signalised junctions, J1 to J4. Today they follow a <b>fixed plan</b>: the same timings all day.', { x: 1000, y: 45, span: 2100 }],
+              [7, '<b>Count the traffic</b> on every approach. The counts show which junction is busiest.', { x: JX[1] - 25, y: 10, span: 250 }],
+              [15, '<b>Measure the queue</b> at red. Later, the detector must sit beyond the end of this queue.', { x: JX[1] - 60, y: 4, span: 240 }],
+              [23, '<b>Time a car</b> from the start of the link to the stop line. SCOOT will need this cruise time.', { x: (JX[0] + JX[1]) / 2, y: 4, span: 400 }],
+              [32, 'Note the <b>people crossing</b> and the <b>cars parked</b> at the kerb. Both limit what the signals can do.', { x: JX[1] - 30, y: 4, span: 170 }]],
       draw(tl, si, now) {
-        const c0 = counts0.split('|').map(Number), n = F.nodes[1];
-        if (si === 1) { tag(JX[1] - 60, 5, 'Eastbound: ' + (n.links.eb.vehTotal - c0[0]) + ' counted', { dy: 44 }); tag(JX[1] + 40, -5, 'Westbound: ' + (n.links.wb.vehTotal - c0[1]) + ' counted', { dy: -44 }); tag(JX[1] + 1.75, 40, 'Side street: ' + (n.links.side.vehTotal - c0[2]) + ' counted', { dx: 80 }); }
-        if (si === 2) { const q = F.realQueue(1, 'eb'), sx = stopX(1, 'eb'); if (q.n > 0) { dim(sx - q.back, sx, 12, 'Queue: ' + q.n + ' cars, ' + Math.round(q.back) + ' m'); } else tag(sx - 30, 12, 'Green: the queue has cleared', {}); }
-        if (si === 3) {
-          if (!track || (track.done && F.t - track.done.at > 4)) pickTrack();
-          if (track) { const v = track.v; if (!track.done && v.s >= JX[1] - 13.5) track.done = { at: F.t, tt: F.t - track.t0 }; if (v.lane) { const p = vehXY(F, v); ring(p.x - v.len / 2, p.y, 4, '#ffd24a', now); tag(p.x, p.y, track.done ? 'Arrived: ' + track.done.tt.toFixed(0) + ' s' : 'Stopwatch: ' + (F.t - track.t0).toFixed(0) + ' s', { dy: -34, bg: '#8a5f00' }); } }
-        }
+        const n = F.nodes[1];
+        if (si === 0) nodeNames();
+        if (si === 1) { tag(JX[1] - 60, 5, 'Eastbound: ' + (n.links.eb.vehTotal - counts0[0]) + ' counted', { dy: 44 }); tag(JX[1] + 40, -5, 'Westbound: ' + (n.links.wb.vehTotal - counts0[1]) + ' counted', { dy: -44 }); tag(JX[1] + 1.75, 40, 'Side street: ' + (n.links.side.vehTotal - counts0[2]) + ' counted', { dx: 80 }); }
+        if (si === 2) { const q = F.realQueue(1, 'eb'), sx = stopX(1, 'eb'); if (q.n > 0) dim(sx - q.back, sx, 12, 'Queue: ' + q.n + ' cars, ' + Math.round(q.back) + ' m'); else tag(sx - 30, 12, 'Green: the queue has cleared', {}); }
+        if (si === 3) stopwatch(F, now);
         if (si === 4) { ring(JX[1] - 9.8, 0, 11, '#ffd24a', now); tag(JX[1] - 9.8, -9, 'Pedestrian crossing', { dy: -50 }); tag(JX[1] - 60, 9.8, 'Parked cars', { dy: 34, from: [JX[1] - 60, 9.8] }); }
       } },
-    { kicker: 'How SCOOT sees', title: 'A detector far up the road', view: 'S', speed: 1, dur: 27, panel: 'p1',
-      steps: [[0, 'SCOOT watches each approach through one <b>detector</b>, placed far upstream of the signal it feeds.', { x: JX[0] + 110, y: 4, span: 330 }],
-              [8, 'Four times a second the loop reports: covered or empty. Each “covered” tick is one unit of traffic, an <b>LPU</b>.', { x: JX[0] + 52, y: 4, span: 120 }],
-              [17, 'Added up through the signal cycle, the ticks draw a picture of <b>when</b> traffic arrives: the cyclic flow profile. It is the first chart below.', { x: JX[0] + 60, y: 4, span: 150 }]],
+    { kicker: 'Step 1', title: 'Nodes, links and stages', out: 'a numbered list of nodes, links and stages, grouped into regions', view: 'F', speed: 1.5, dur: 38, step: 0, done: 0,
+      steps: [[0, 'Give every signalised junction a number. In SCOOT each one is a <b>node</b>.', { x: 1000, y: 45, span: 2100 }],
+              [7, 'Every approach to a stop line is a <b>link</b>. Each link will get its own detector and its own model.', { x: 575, y: 30, span: 950 }],
+              [14, 'List the <b>stages</b> at each node: which movements get green together, and in what order.', { x: JX[1] - 5, y: 12, span: 170 }],
+              [23, 'Group close junctions into a <b>region</b>. A region shares one cycle time so its greens can stay in step.', { x: 1000, y: 45, span: 2100 }],
+              [30, 'The 850 m link is too long: platoons spread out before J4. The <b>boundary</b> goes there and J4 becomes its own region.', { x: 1000, y: 45, span: 2100 }]],
+      draw(tl, si) {
+        if (si === 0) nodeNames(j => ' · node ' + (j + 1));
+        if (si === 1) { nodeNames(); for (let j = 0; j < 3; j++) { tag(JX[j] - 60, 5, 'link ' + (j + 1) + 'A →', { dy: 26, bg: '#1d6fb8', size: 12 }); tag(JX[j] + 60, -5, '← link ' + (j + 1) + 'B', { dy: -26, bg: '#1d6fb8', size: 12 }); tag(JX[j] + 1.75, 60, 'link ' + (j + 1) + 'C ↑', { dx: 44, bg: '#1d6fb8', size: 12 }); } }
+        if (si === 2) stageTags(F, 1);
+        if (si >= 3) { nodeNames(); dim(JX[0], JX[1], -85, '300 m'); dim(JX[1], JX[2], -85, '350 m'); dim(JX[2], JX[3], -85, '850 m'); box(JX[0] - 90, -30, JX[2] + 90, 70, '#0d5a3a', 'Region A · J1, J2, J3 · one cycle time'); }
+        if (si >= 4) { box(JX[3] - 90, -30, JX[3] + 90, 70, '#1d6fb8', 'Region B · J4'); const bx = (JX[2] + JX[3]) / 2; ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 4; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(SX(bx), SY(-45)); ctx.lineTo(SX(bx), SY(80)); ctx.stroke(); ctx.setLineDash([]); tag(bx, -45, 'Boundary', { dy: -18, bg: '#c0392b' }); }
+      } },
+    { kicker: 'Step 2', title: 'Detector location', out: 'a detector site for every link, with its distance to the stop line', view: 'S', speed: 1, dur: 38, step: 1, done: 1, panel: 'p1',
+      steps: [[0, 'Every link gets <b>one detector site</b>. These loops are SCOOT’s only eyes on the street.', { x: 575, y: 30, span: 950 }],
+              [7, 'Put it at the <b>upstream end</b> of the link: beyond the longest normal queue and clear of parked cars and bus stops.', { x: JX[0] + 150, y: 4, span: 340 }],
+              [17, 'Four times a second the loop reports: covered or empty. Each “covered” tick is one unit of traffic, an <b>LPU</b>.', { x: JX[0] + 52, y: 4, span: 120 }],
+              [27, 'Added up through the signal cycle, the ticks show <b>when</b> traffic arrives: the cyclic flow profile, chart 1 below.', { x: JX[0] + 60, y: 4, span: 150 }]],
       draw(tl, si, now) {
         const n = S.nodes[1], L = n.links.eb, c = loopCentre(n, 'eb');
+        if (si === 0) { S.nodes.forEach(m => ['eb', 'wb', 'side'].forEach(k => { const q = loopCentre(m, k); ring(q.x, q.y, 6, '#ffd24a', now); })); nodeNames(); return; }
         ring(c.x, c.y, 5.5, L.flash > 0.2 ? '#ffd24a' : '#ffffff', now);
-        tag(c.x, c.y, si === 0 ? 'Detector for J2 eastbound' : 'LPUs counted: ' + L.lpuTotal, { dy: 58, bg: '#8a5f00' });
-        if (si === 0) { tag(stopX(1, 'eb'), 5, 'J2 stop line', { dy: 44, from: [stopX(1, 'eb'), 5] }); dim(L.detS, stopX(1, 'eb'), -13, Math.round(L.dist) + ' m, about ' + L.jt + ' s of driving'); }
+        tag(c.x, c.y, si === 1 ? 'Detector for link 2A (J2 eastbound)' : 'LPUs counted: ' + L.lpuTotal, { dy: 58, bg: '#8a5f00' });
+        if (si === 1) { const q = S.realQueue(1, 'eb'), sx = stopX(1, 'eb'); tag(sx, 5, 'J2 stop line', { dy: 44, from: [sx, 5] }); dim(L.detS, sx, -13, Math.round(L.dist) + ' m to the stop line, about ' + L.jt + ' s of driving'); if (q.n) dim(sx - q.back, sx, 12, 'queue now: ' + Math.round(q.back) + ' m'); }
       } },
-    { kicker: 'How SCOOT sees', title: 'From detector ticks to a predicted queue', view: 'S', speed: 1, dur: 27, panel: 'p2',
-      steps: [[0, 'SCOOT knows the cruise time to the stop line, so it knows <b>when</b> each car will arrive there.', { x: JX[0] + 150, y: 4, span: 330 }],
-              [9, 'Arrivals during red join a queue in SCOOT’s model. During green the model queue drains at a known rate.', { x: JX[1] - 75, y: 4, span: 230 }],
-              [18, 'The model queue is a <b>prediction</b>: there is no camera at the stop line. Compare it with the real queue.', { x: JX[1] - 75, y: 4, span: 230 }]],
-      draw(tl, si) {
-        const sx = stopX(1, 'eb'), q = S.realQueue(1, 'eb');
-        tag(sx - 45, -9, 'SCOOT predicts: ' + modelVeh(S, 1, 'eb').toFixed(0) + ' cars', { dy: -46, bg: '#0d5a3a' });
-        tag(sx - 45, 9, 'On the street: ' + q.n + ' cars', { dy: 46 });
-      } },
-    { kicker: 'How SCOOT decides', title: 'Three small decisions, again and again', view: 'S', speed: 6, dur: 33, panel: 'p3',
-      steps: [[0, '<b>Split.</b> At each junction SCOOT moves a few seconds of green towards the busier approach.', { x: 575, y: 30, span: 900 }],
-              [11, '<b>Offset.</b> Once per cycle it tries starting the green 4 seconds earlier or later, so that platoons meet a green light.', { x: 575, y: 30, span: 900 }],
-              [22, '<b>Cycle time.</b> Every few minutes it lengthens or shortens the cycle for the whole group, aiming for about 90% use at the busiest junction.', { x: 575, y: 30, span: 900 }]],
-      draw() {
-        nodeNames(j => ' · ' + S.nodes[j].C + ' s cycle');
-        const col = { split: '#1d6fb8', offset: '#8a3fa0', cycle: '#b3541e' }, seen = {};
-        for (let i = S.events.length - 1; i >= 0; i--) { const e = S.events[i]; if (S.t - e.t > 16) break; const k = e.node + e.kind; if (seen[k]) continue; seen[k] = 1; const row = e.kind === 'split' ? 0 : e.kind === 'offset' ? 1 : 2; tag(JX[e.node], 14, e.text, { dy: 30 + row * 30, bg: col[e.kind], alpha: Math.min(1, (16 - (S.t - e.t)) / 5) }); }
-      } },
-    { kicker: 'Network', title: 'Which junctions belong together?', view: 'S', speed: 3, dur: 27,
-      steps: [[0, 'Junctions that are <b>close together</b> pass platoons of cars to each other. They gain from working as a team.', { x: 1000, y: 45, span: 2100 }],
-              [9, 'J1, J2 and J3 form one <b>region</b>. They share one cycle time so their greens can stay in step.', { x: 1000, y: 45, span: 2100 }],
-              [18, 'The 850 m link is too long: platoons spread out before J4. The <b>boundary</b> goes here and J4 runs its own cycle.', { x: 1000, y: 45, span: 2100 }]],
-      draw(tl, si) {
-        nodeNames();
-        dim(JX[0], JX[1], -85, '300 m'); dim(JX[1], JX[2], -85, '350 m'); dim(JX[2], JX[3], -85, '850 m');
-        if (si >= 1) box(JX[0] - 90, -30, JX[2] + 90, 70, '#0d5a3a', 'Region A · one cycle: ' + S.regions[0].C + ' s');
-        if (si >= 2) { box(JX[3] - 90, -30, JX[3] + 90, 70, '#1d6fb8', 'Region B · ' + S.regions[1].C + ' s'); const bx = (JX[2] + JX[3]) / 2; ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 4; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(SX(bx), SY(-45)); ctx.lineTo(SX(bx), SY(80)); ctx.stroke(); ctx.setLineDash([]); tag(bx, -45, 'Boundary', { dy: -18, bg: '#c0392b' }); }
-      } },
-    { kicker: 'Design', title: 'Seven design steps, in order', view: 'S', speed: 3, dur: 49, stepper: true,
-      steps: [[0, '<b>1 · Nodes, links, stages.</b> List every junction (node), every approach (link) and the order of the greens (stages).', { x: 575, y: 30, span: 950 }],
-              [7, '<b>2 · Detector location.</b> One detector per link, far upstream and clear of parked cars.', { x: 575, y: 30, span: 950 }],
-              [14, '<b>3 · Communications.</b> Connect every junction to the control centre. Data travels both ways every second.', { x: 575, y: 40, span: 950 }],
-              [21, '<b>4 · Cycle time limits.</b> Set the shortest and longest cycle allowed. The shortest must still let pedestrians cross.', { x: 575, y: 30, span: 950 }],
-              [28, '<b>5 · Link validation.</b> On street, tune each link until SCOOT’s queue matches the real one.', { x: 575, y: 30, span: 950 }],
-              [35, '<b>6 · Extra facilities.</b> Add extras where needed, such as bus priority and pedestrian priority.', { x: 575, y: 30, span: 950 }],
-              [42, '<b>7 · Evaluation.</b> Compare delay before and after, in matching conditions. It is the last chart below.', { x: 575, y: 30, span: 950 }]],
-      draw(tl, si, now) {
-        if (si === 0) { nodeNames(); for (let j = 0; j < 3; j++) { tag(JX[j] - 60, 5, 'link →', { dy: 26, bg: '#1d6fb8', size: 12 }); tag(JX[j] + 60, -5, '← link', { dy: -26, bg: '#1d6fb8', size: 12 }); tag(JX[j] + 1.75, 60, 'link ↑', { dx: 34, bg: '#1d6fb8', size: 12 }); } }
-        if (si === 1) S.nodes.forEach(n => ['eb', 'wb', 'side'].forEach(k => { const c = loopCentre(n, k); ring(c.x, c.y, 6, '#ffd24a', now); }));
-        if (si === 2) { fibre(now, 3); tag(CC.x + CC.w / 2, CC.y + CC.h, 'Control centre', { dy: 18, bg: '#b3541e' }); }
-        if (si === 3) { box(JX[0] - 90, -30, JX[2] + 90, 70, '#0d5a3a', 'Region A · cycle may run from ' + S.regions[0].min + ' to ' + S.regions[0].max + ' s'); JX.slice(0, 3).forEach(x => tag(x - 9.8, 0, 'crossing needs 14 s', { dy: -40, size: 12 })); }
-        if (si === 4) for (let j = 0; j < 3; j++) { const m = modelVeh(S, j, 'eb'), r = S.realQueue(j, 'eb').n; tag(JX[j] - 40, 5, 'model ' + m.toFixed(0) + ' · street ' + r + (Math.abs(m - r) <= 2 ? '  ✓' : ''), { dy: 34, bg: Math.abs(m - r) <= 2 ? '#0d5a3a' : '#8a5f00' }); }
-        if (si === 5) { S.eb.concat(S.wb).forEach(L => L.veh.forEach(v => { if (v.bus) { const x = L.kind === 'eb' ? v.s : XMAX - v.s; ring(x, L.y, 9, '#1fd0d0', now); tag(x, L.y, 'bus', { dy: -26, bg: '#167a7a', size: 12 }); } })); JX.slice(0, 3).forEach(x => ring(x - 9.8, 0, 12, '#ffd24a', now)); }
-        if (si === 6) nodeNames();
-      } },
-    { kicker: 'Hardware', title: 'What gets installed', view: 'S', speed: 1, dur: 27,
-      steps: [[0, '<b>Detectors:</b> wire loops cut into the road surface, one site per link. Each is wired to the nearest cabinet.', { x: JX[1], y: 6, span: 190 }],
-              [9, '<b>Controller cabinet:</b> switches the lamps and holds a fallback plan. An outstation unit beside it talks to the centre every second.', { x: JX[1] + 8, y: 10, span: 110 }],
-              [18, '<b>Control centre:</b> the SCOOT computer, the operators’ screens and the store of past data, joined to the street by a data network.', { x: JX[1] + 50, y: 28, span: 260 }]],
+    { kicker: 'Step 3', title: 'Communications', out: 'a data link from every cabinet to the control centre, and a fallback plan', view: 'S', speed: 1, dur: 30, step: 2, done: 2,
+      steps: [[0, '<b>Loops</b> are cut into the road surface and wired to the nearest cabinet.', { x: JX[1], y: 6, span: 190 }],
+              [8, 'The <b>cabinet</b> holds the signal controller and an outstation unit. Every second it sends detector data up and receives stage commands back.', { x: JX[1] + 8, y: 10, span: 110 }],
+              [18, 'A <b>data network</b> joins every cabinet to the control centre. If the link fails, the junction drops to its stored fallback plan.', { x: JX[1] + 50, y: 28, span: 260 }]],
       draw(tl, si, now) {
         const a = loopCentre(S.nodes[2], 'eb'), b = loopCentre(S.nodes[0], 'wb'), cab = [JX[1] + 7.3, 13.3];
-        if (si === 0) { [a, b].forEach(c => { ring(c.x, c.y, 5.5, '#ffd24a', now); ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(SX(c.x), SY(c.y)); ctx.lineTo(SX(c.x), SY(12.2)); ctx.lineTo(SX(cab[0]), SY(12.2)); ctx.stroke(); ctx.setLineDash([]); }); tag(a.x, a.y, 'Loop for the J3 link', { dy: -52, bg: '#8a5f00' }); tag(b.x, b.y, 'Loop for the J1 link', { dy: -52, bg: '#8a5f00' }); tag(cab[0], cab[1], 'Cabinet', { dy: 40, from: cab }); }
+        if (si === 0) { [a, b].forEach(c => { ring(c.x, c.y, 5.5, '#ffd24a', now); ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(SX(c.x), SY(c.y)); ctx.lineTo(SX(c.x), SY(12.2)); ctx.lineTo(SX(cab[0]), SY(12.2)); ctx.stroke(); ctx.setLineDash([]); }); tag(a.x, a.y, 'Loop for link 3A', { dy: -52, bg: '#8a5f00' }); tag(b.x, b.y, 'Loop for link 1B', { dy: -52, bg: '#8a5f00' }); tag(cab[0], cab[1], 'Cabinet', { dy: 40, from: cab }); }
         if (si === 1) { ring(cab[0], cab[1], 3, '#ffd24a', now); tag(cab[0], cab[1], 'Controller + outstation unit', { dy: 50, dx: 60, from: cab }); tag(JX[1] + 4.9, 12.4, 'Signal head', { dx: 110, dy: -40, from: [JX[1] + 4.9, 12.4] }); }
         if (si === 2) { fibre(now, 3); tag(CC.x + CC.w / 2, CC.y + CC.h / 2, 'Control centre\nserver · screens · data store', { bg: '#b3541e' }); tag(JX[1] + 30, 16.5, 'data network', { dy: -20, bg: '#b3541e', size: 12 }); }
       } },
-    { kicker: 'Evaluation', title: 'Evening rush: fixed plan against SCOOT', view: 'S', speed: 30, dur: 48, panel: 'p4', rush: true,
+    { kicker: 'Step 4', title: 'Cycle time limits', out: 'a minimum and maximum cycle time for each region', view: 'S', speed: 1.5, dur: 30, step: 3, done: 3, panel: 'p3',
+      steps: [[0, 'The <b>shortest</b> cycle must still fit every stage’s minimum green. People need 14 s to cross, so the side stage can never be shorter.', { x: JX[1] - 5, y: 12, span: 170 }],
+              [10, 'Add it up for one node: 16 s main + 14 s side + two 5 s intergreens = <b>40 s</b>. The region’s minimum is set a little above that.', { x: JX[1] - 5, y: 12, span: 170 }],
+              [20, 'The <b>longest</b> cycle is a policy choice. A longer cycle carries more traffic but makes everyone wait longer. SCOOT will move between the two limits.', { x: 575, y: 30, span: 950 }]],
+      draw(tl, si, now) {
+        if (si === 0) { stageTags(S, 1); ring(JX[1] - 9.8, 0, 11, '#ffd24a', now); }
+        if (si === 1) { tag(JX[1] - 40, -5, 'main green ≥ 16 s', { dy: -34, bg: '#0d7a4c' }); tag(JX[1] + 1.75, 30, 'side green ≥ 14 s', { dx: 90, bg: '#1d6fb8' }); tag(JX[1], 0, '+ 2 × 5 s intergreen = 40 s minimum', { bg: '#a86a00' }); }
+        if (si === 2) { nodeNames(j => ' · now ' + S.nodes[j].C + ' s'); box(JX[0] - 90, -30, JX[2] + 90, 70, '#0d5a3a', 'Region A · cycle may run from ' + S.regions[0].min + ' s to ' + S.regions[0].max + ' s'); }
+      } },
+    { kicker: 'Step 5', title: 'Link validation', out: 'for every link: journey time, saturation occupancy and a model queue that matches the street', view: 'S', speed: 1, dur: 46, step: 4, done: 4, panel: 'p2',
+      enter() { track = null; },
+      steps: [[0, 'Validation is done <b>on the street</b>, link by link. First enter the <b>journey time</b> from detector to stop line.', { x: (JX[0] + JX[1]) / 2, y: 4, span: 400 }],
+              [10, 'Then the <b>saturation occupancy</b>: how fast a queue leaves at green. Watch the queue discharge and tune until the model empties at the same moment.', { x: JX[1] - 75, y: 4, span: 230 }],
+              [21, 'Check the result: SCOOT’s <b>model queue</b> against the queue you can see. It is chart 2 below.', { x: JX[1] - 75, y: 4, span: 230 }, 'p2'],
+              [31, 'Now SCOOT can work out the <b>degree of saturation</b> (DS): traffic arriving in a cycle, divided by what the green can discharge. It is chart 5 below.', { x: JX[1] - 20, y: 10, span: 260 }, 'p5'],
+              [39, 'DS is the number the optimisers steer by. Below 80% there is spare green. Above 90% the approach is close to full.', { x: 575, y: 30, span: 950 }, 'p5']],
+      draw(tl, si, now) {
+        const sx = stopX(1, 'eb'), L = S.nodes[1].links.eb, q = S.realQueue(1, 'eb');
+        if (si === 0) { stopwatch(S, now); tag(L.detS + 1, 5, 'journey time entered: ' + L.jt + ' s', { dy: 60, bg: '#0d5a3a' }); }
+        if (si === 1) { tag(sx, 5, 'saturation occupancy: ' + L.stoc.toFixed(1) + ' LPU per second', { dy: 50, bg: '#0d5a3a', from: [sx, 5] }); tag(sx - 45, -9, S.nodes[1].stage === 'A' ? 'Green: queue discharging' : 'Red: queue building', { dy: -46, bg: S.nodes[1].stage === 'A' ? '#0d7a4c' : '#b3352b' }); }
+        if (si === 2) { const m = modelVeh(S, 1, 'eb'); tag(sx - 45, -9, 'SCOOT’s model: ' + m.toFixed(0) + ' cars', { dy: -46, bg: '#0d5a3a' }); tag(sx - 45, 9, 'On the street: ' + q.n + ' cars' + (Math.abs(m - q.n) <= 2 ? '  ✓' : ''), { dy: 46 }); }
+        if (si === 3) { dosBadges(S); const l = L.last; if (l) tag(sx - 70, 5, 'Link 2A last cycle: ' + l.lpu.toFixed(0) + ' LPU ÷ (' + L.stoc.toFixed(1) + ' × ' + l.g.toFixed(0) + ' s green) = ' + pct(l.x), { dy: 70, bg: '#0b2a3d' }); }
+        if (si === 4) dosBadges(S);
+      } },
+    { kicker: 'Go live', title: 'SCOOT takes control: three small decisions', out: 'a region running under SCOOT, watched by the engineer', view: 'S', speed: 6, dur: 38, step: -1, done: 5, panel: 'p3', live: true,
+      steps: [[0, '<b>Split.</b> At each node SCOOT moves 1 to 4 s of green towards the stage with the higher DS.', { x: 575, y: 30, span: 900 }, 'p5'],
+              [13, '<b>Offset.</b> Once per cycle it tries starting the green 4 s earlier or later, so that platoons meet a green light.', { x: 575, y: 30, span: 900 }, 'p1'],
+              [26, '<b>Cycle time.</b> Every few minutes it lengthens or shortens the cycle for the whole region, to hold the busiest node near 90% DS.', { x: 575, y: 30, span: 900 }, 'p3']],
+      draw() {
+        nodeNames(j => ' · ' + S.nodes[j].C + ' s cycle'); dosBadges(S);
+        const col = { split: '#1d6fb8', offset: '#8a3fa0', cycle: '#b3541e' }, seen = {};
+        for (let i = S.events.length - 1; i >= 0; i--) { const e = S.events[i]; if (S.t - e.t > 16) break; const k = e.node + e.kind; if (seen[k]) continue; seen[k] = 1; const row = e.kind === 'split' ? 1 : e.kind === 'offset' ? 2 : 3; tag(JX[e.node], 14, e.text, { dy: 26 + row * 28, bg: col[e.kind], alpha: Math.min(1, (16 - (S.t - e.t)) / 5) }); }
+      } },
+    { kicker: 'Step 6', title: 'Extra facilities', out: 'only the extras this street needs, each one tuned after validation', view: 'S', speed: 2, dur: 22, step: 5, done: 5,
+      steps: [[0, 'With the basic system validated, add extras where the street needs them. <b>Bus priority</b> holds or recalls a green for a detected bus.', { x: 575, y: 30, span: 950 }],
+              [8, '<b>Pedestrian priority</b> cuts waiting at busy crossings, which matters on a seafront.', { x: JX[1] - 30, y: 4, span: 170 }],
+              [15, '<b>Congestion tools</b> hold traffic back on purpose where a queue would otherwise block the junction behind it.', { x: 575, y: 30, span: 950 }]],
+      draw(tl, si, now) {
+        if (si === 0) S.eb.concat(S.wb).forEach(L => L.veh.forEach(v => { if (v.bus) { const x = L.kind === 'eb' ? v.s : XMAX - v.s; ring(x, L.y, 9, '#1fd0d0', now); tag(x, L.y, 'bus', { dy: -26, bg: '#167a7a', size: 12 }); } }));
+        if (si === 1) { ring(JX[1] - 9.8, 0, 11, '#ffd24a', now); tag(JX[1] - 9.8, -9, S.peds.filter(p => p.j === 1 && p.wait).length + ' people waiting', { dy: -50 }); }
+        if (si === 2) { nodeNames(); dosBadges(S); }
+      } },
+    { kicker: 'Step 7', title: 'Evaluation: an evening rush, before and after', out: 'a before-and-after comparison of delay in matching conditions', view: 'S', speed: 30, dur: 48, step: 6, done: 6, panel: 'p4', rush: true, live: true,
       enter() { base = { t: S.t, f: { n: F.totals.n, delay: F.totals.delay }, s: { n: S.totals.n, delay: S.totals.delay } }; },
       steps: [[0, 'Now the test, in fast forward. Evening traffic builds, most of all westbound and out of the side street at J2.', { x: 640, y: 45, span: 1250 }],
-              [11, 'The fixed plan cannot react. SCOOT gives the busy side street more green and stretches the cycle.', { x: JX[1], y: 45, span: 620 }],
-              [23, 'Watch the delay chart below. Both lines rise in the rush. The two streets are the same; only the signal control differs.', { x: 640, y: 45, span: 1250 }],
-              [35, '', { x: 1000, y: 45, span: 2100 }]],
+              [11, 'Watch DS climb. The fixed plan cannot react. SCOOT gives the busy side street more green and stretches the cycle.', { x: JX[1], y: 45, span: 620 }, 'p5'],
+              [23, 'Chart 4 compares delay. The two streets and their traffic are identical; only the signal control differs.', { x: 640, y: 45, span: 1250 }, 'p4'],
+              [35, '', { x: 1000, y: 45, span: 2100 }, 'p4']],
       draw(tl, si) {
-        nodeNames(j => ' · ' + S.nodes[j].C + ' s'); const r = result();
+        nodeNames(j => ' · ' + S.nodes[j].C + ' s'); dosBadges(S); const r = result();
         if (si === 1) tag(JX[1] + 1.75, 70, 'Side green now ' + S.nodes[1].gB.toFixed(0) + ' s (fixed plan: 20 s)', { dx: 150, bg: '#1d6fb8', from: [JX[1] + 1.75, 60] });
         if (si === 3 && r) setCaption('Since the rush began in this run: <b>fixed plan ' + r.f.toFixed(0) + ' s</b> of delay per vehicle, <b>SCOOT ' + r.s.toFixed(0) + ' s</b>. This is a teaching simulation, not a forecast for any real road.');
       } },
   ];
+  function stopwatch(Wd, now) {
+    if (!track || track.w !== Wd || (track.done && Wd.t - track.done.at > 4)) pickTrack(Wd);
+    if (!track) return; const v = track.v; if (!track.done && v.s >= JX[1] - 13.5) track.done = { at: Wd.t, tt: Wd.t - track.t0 };
+    ring(v.s - v.len / 2, v.lane.y + v.lat, 4, '#ffd24a', now); tag(v.s, v.lane.y, track.done ? 'Arrived: ' + track.done.tt.toFixed(0) + ' s' : 'Stopwatch: ' + (Wd.t - track.t0).toFixed(0) + ' s', { dy: -34, bg: '#8a5f00' });
+  }
   function result() { const fn = F.totals.n - base.f.n, sn = S.totals.n - base.s.n; if (fn < 20 || sn < 20) return null; return { f: (F.totals.delay - base.f.delay) / fn, s: (S.totals.delay - base.s.delay) / sn }; }
 
   // ---------------- state, controls ----------------
@@ -313,9 +341,11 @@
     ch = (i + chapters.length) % chapters.length; tl = 0; stepIdx = -1; free = false; const c = chapters[ch]; if (c.enter) c.enter();
     $('capKicker').textContent = (ch + 1) + ' / ' + chapters.length + ' · ' + c.kicker; $('capTitle').textContent = c.title;
     document.querySelectorAll('.chip').forEach((b, k) => b.setAttribute('aria-current', k === ch ? 'step' : 'false'));
-    document.querySelectorAll('.cpanel').forEach(p => p.classList.toggle('hot', p.id === c.panel));
-    $('stepper').hidden = !c.stepper; $('tourBtn').hidden = true; $('ended').hidden = true;
+    hot(c.panel); $('capOut').innerHTML = c.out ? '<b>You produce:</b> ' + c.out : '';
+    document.querySelectorAll('#stepper li').forEach((li, k) => li.className = k < c.done ? 'done' : k === c.step ? 'on' : '');
+    $('stepper').hidden = false; $('tourBtn').hidden = true; $('ended').hidden = true;
   }
+  function hot(id) { document.querySelectorAll('.cpanel').forEach(p => p.classList.toggle('hot', p.id === id)); }
   function currentView() { return viewSel === 'auto' ? (free ? 'S' : chapters[ch].view) : viewSel; }
 
   // ---------------- console panels ----------------
@@ -351,8 +381,28 @@
     d.forEach((e, i) => { if (e.rush > 0.5) { x.fillStyle = amber + '22'; x.fillRect(X4(i + 90 - d.length) - (p.w - 42) / 178, 8, (p.w - 42) / 89 + 1, p.h - 32); } });
     [['f', stop], ['s', go]].forEach(s => { x.strokeStyle = s[1]; x.lineWidth = 2.5; x.beginPath(); d.forEach((e, i) => { const xx = X4(i + 90 - d.length), yy = Y4(e[s[0]]); i ? x.lineTo(xx, yy) : x.moveTo(xx, yy); }); x.stroke(); });
     x.fillStyle = stop; x.fillRect(38, p.h - 13, 14, 3); x.fillStyle = fg; x.fillText('fixed plan', 56, p.h - 6); x.fillStyle = go; x.fillRect(122, p.h - 13, 14, 3); x.fillStyle = fg; x.fillText('SCOOT · seconds of delay per vehicle, last 30 min · shaded = rush', 140, p.h - 6);
+    // 5 degree of saturation by approach
+    p = prep($('c5')); x = p.x; const top = 1.4, gw = (p.w - 44) / 4, Y5 = v => 10 + (p.h - 36) * (1 - Math.min(top, v) / top);
+    x.strokeStyle = line; x.fillStyle = mu; [0, 0.5, 1].forEach(v => { const y = Y5(v); x.beginPath(); x.moveTo(36, y); x.lineTo(p.w - 4, y); x.stroke(); x.fillText(v * 100 + '%', 4, y + 4); });
+    Wd.regions.forEach(R => { let cn = R.nodes[0], cm = 0; R.nodes.forEach(j => { const nd = Wd.nodes[j], m = Math.max(nd.links.eb.dos, nd.links.wb.dos, nd.links.side.dos); if (m >= cm) { cm = m; cn = j; } }); R.liveCrit = cn; });
+    Wd.nodes.forEach((nd, j) => {
+      const x0 = 40 + j * gw, bw5 = (gw - 22) / 3;
+      [['eb', 'E'], ['wb', 'W'], ['side', 'S']].forEach((k, i) => { const v = nd.links[k[0]].dos, y = Y5(v); x.fillStyle = dosCol(v); x.fillRect(x0 + i * (bw5 + 3), y, bw5, Y5(0) - y); x.fillStyle = mu; x.fillText(k[1], x0 + i * (bw5 + 3) + bw5 / 2 - 3, p.h - 14); if (j === sel.j && k[0] === sel.k) { x.strokeStyle = fg; x.lineWidth = 2; x.strokeRect(x0 + i * (bw5 + 3) - 1.5, y - 1.5, bw5 + 3, Y5(0) - y + 3); } });
+      x.fillStyle = fg; x.font = '600 12px Barlow, system-ui, sans-serif'; x.fillText('J' + (j + 1) + (Wd.regions[nd.region].liveCrit === j ? ' · critical' : ''), x0, p.h - 2); x.font = '12px Barlow, system-ui, sans-serif';
+    });
+    x.strokeStyle = stop; x.lineWidth = 1.5; x.setLineDash([6, 4]); x.beginPath(); x.moveTo(36, Y5(0.9)); x.lineTo(p.w - 4, Y5(0.9)); x.stroke(); x.setLineDash([]); x.fillStyle = stop; x.fillText('90% target', p.w - 66, Y5(0.9) - 4);
+    // 6 the numbers behind the selected link
+    const lk = { eb: 'A', wb: 'B', side: 'C' }[sel.k], l = L.last, off = (((n.cycleStart - Wd.nodes[0].cycleStart) % n.C) + n.C) % n.C, rq = Wd.realQueue(sel.j, sel.k);
+    const rows = [['Link', (sel.j + 1) + lk + ' · J' + (sel.j + 1) + ' ' + (sel.k === 'eb' ? 'eastbound' : sel.k === 'wb' ? 'westbound' : 'side street') + ' · region ' + 'AB'[n.region]],
+      ['Detector to stop line', Math.round(L.dist) + ' m · journey time ' + L.jt + ' s'],
+      ['One free-flowing vehicle', L.lpv.toFixed(1) + ' LPU'], ['Saturation occupancy', L.stoc.toFixed(2) + ' LPU per second'],
+      ['Cycle · green for this link', n.C + ' s · ' + gLen.toFixed(0) + ' s'], ['Offset after J1', sel.j ? off.toFixed(0) + ' s' : 'reference node'],
+      ['Arrived last cycle', l ? l.lpu.toFixed(0) + ' LPU' : '…'], ['Green could discharge', l ? (L.stoc * l.g).toFixed(0) + ' LPU' : '…'],
+      ['Degree of saturation', l ? pct(l.x) + ' last cycle · ' + pct(L.dos) + ' smoothed' : '…'], ['Queue: model · street', modelVeh(Wd, sel.j, sel.k).toFixed(0) + ' · ' + rq.n + ' vehicles']];
+    const html = rows.map(r => '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>').join(''); if (html !== lastNums) { lastNums = html; $('nums').innerHTML = html; }
     const r = result(); $('res').textContent = r ? 'Since ' + clock(base.t) + ': fixed plan ' + r.f.toFixed(0) + ' s per vehicle, SCOOT ' + r.s.toFixed(0) + ' s.' : 'Collecting vehicles…';
   }
+  let lastNums = '';
   const clock = t => { const m = 17 * 60 + 30 + Math.floor(t / 60); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 
   // ---------------- main loop ----------------
@@ -365,8 +415,8 @@
       if (!free) {
         tl += dt * (userSpeed >= 1 ? 1 : userSpeed);
         let si = 0; c.steps.forEach((s, k) => { if (tl >= s[0]) si = k; });
-        if (si !== stepIdx) { stepIdx = si; const s = c.steps[si]; if (s[1]) setCaption(s[1]); Object.assign(tgt, s[2]); if (c.stepper) document.querySelectorAll('#stepper li').forEach((li, k) => li.className = k < si ? 'done' : k === si ? 'on' : ''); }
-        if (tl >= c.dur) { if (ch === chapters.length - 1) { free = true; $('ended').hidden = false; $('tourBtn').hidden = false; document.querySelectorAll('.cpanel').forEach(p => p.classList.remove('hot')); } else enter(ch + 1); }
+        if (si !== stepIdx) { stepIdx = si; const st = c.steps[si]; if (st[1]) setCaption(st[1]); Object.assign(tgt, st[2]); hot(st[3] || c.panel); }
+        if (tl >= c.dur) { if (ch === chapters.length - 1) { free = true; $('ended').hidden = false; $('tourBtn').hidden = false; hot(null); document.querySelectorAll('#stepper li').forEach(li => li.className = 'done'); } else enter(ch + 1); }
       }
       const force = rush === 'on' ? 1 : rush === 'off' ? 0 : (!free && c.rush ? Math.min(1, tl / 8) : (!free ? 0 : null));
       F.forceSurge = S.forceSurge = force;
@@ -377,7 +427,7 @@
     const k = 1 - Math.pow(0.02, dt), tz = W / tgt.span; cam.x += (tgt.x - cam.x) * k; cam.y += (tgt.y - cam.y) * k; cam.z *= Math.pow(tz / cam.z, k);
     const Wd = currentView() === 'F' ? F : S;
     drawWorld(Wd, wall); ui();
-    if (!free && stepIdx >= 0) c.draw && c.draw(tl, stepIdx, wall); else nodeNames(j => ' · ' + Wd.nodes[j].C + ' s');
+    if (!free && stepIdx >= 0) c.draw && c.draw(tl, stepIdx, wall); else { nodeNames(j => ' · ' + Wd.nodes[j].C + ' s'); dosBadges(Wd); }
     scaleBar();
     if (frame % 6 === 0) { panels(); const d = C.demand(S.t, S.forceSurge); $('hudClock').textContent = clock(S.t); $('hudMode').textContent = currentView() === 'F' ? 'Showing: fixed plan' : 'Showing: SCOOT'; $('hudMode').className = 'badge ' + (currentView() === 'F' ? 'fx' : 'sc'); $('hudRush').style.width = Math.round(d.s * 100) + '%'; $('hudSpeed').textContent = speed >= 2 ? '×' + speed.toFixed(0) + ' fast forward' : ''; }
     requestAnimationFrame(tick);
@@ -405,7 +455,7 @@
     $('rush').addEventListener('change', e => rush = e.target.value);
     $('link').addEventListener('change', e => { const v = e.target.value.split('-'); sel = { j: +v[0], k: v[1] }; hist.q.length = 0; });
     // free exploration: drag to pan, wheel or pinch buttons to zoom
-    const goFree = () => { if (!free) { free = true; $('tourBtn').hidden = false; setCaption('Exploring freely. Drag to move, scroll or use + and − to zoom. The simulation keeps running.'); document.querySelectorAll('.cpanel').forEach(p => p.classList.remove('hot')); $('stepper').hidden = true; } };
+    const goFree = () => { if (!free) { free = true; $('tourBtn').hidden = false; setCaption('Exploring freely. Drag to move, scroll or use + and − to zoom. The simulation keeps running.'); hot(null); $('capOut').innerHTML = ''; } };
     let drag = null;
     cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); });
     cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (!free && Math.abs(dx) + Math.abs(dy) < 6) return; goFree(); tgt.x -= dx / cam.z; tgt.y -= dy / cam.z; cam.x = tgt.x; cam.y = tgt.y; drag = { x: e.clientX, y: e.clientY }; });

@@ -31,6 +31,9 @@
   .caption { position: absolute; left: 10px; right: 10px; bottom: 10px; max-width: 760px; background: rgba(11, 26, 38, .88); color: #fff; border-radius: 12px; padding: 10px 16px 12px; pointer-events: none; }
   .caption small { font: 700 .76rem var(--body); letter-spacing: .13em; text-transform: uppercase; color: #ffd24a; }
   .caption h2 { font-size: 1.45rem; margin: 2px 0 4px; color: #fff; }
+  #capOut { margin-top: 5px; font-size: .92rem; color: #cfe6da; } #capOut:empty { display: none; } #capOut b { color: #7fe0ae; }
+  .nums { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; margin: 6px 0 0; font-size: .93rem; } .nums dt { color: var(--muted); } .nums dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .steps-table { width: 100%; border-collapse: collapse; font-size: .95rem; margin-top: 1rem; } .steps-table th, .steps-table td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); } .steps-table th { font: 700 1rem var(--display); } .steps-table td:first-child { font-weight: 600; white-space: nowrap; }
   .caption p { margin: 0; font-size: 1.04rem; line-height: 1.4; } .caption p b { color: #ffd24a; }
   #ended { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(11, 26, 38, .45); }
   #ended[hidden] { display: none; }
@@ -54,7 +57,7 @@
 <main class="wrap">
   <header class="level-head prose">
     <h1>The whole SCOOT process, animated</h1>
-    <p class="lede">One street, start to finish: survey it, see how SCOOT reads it, choose the junctions, follow the seven design steps, install the hardware, then test it in an evening rush. About five minutes. No formulas.</p>
+    <p class="lede">How a SCOOT scheme is implemented, step by step, on one simulated street: survey it, define nodes, links and stages, place detectors, connect them, set cycle limits, validate each link, go live, then evaluate. About five and a half minutes.</p>
   </header>
 
   <div class="chips" id="chips" role="group" aria-label="Chapters"></div>
@@ -63,7 +66,7 @@
     <div class="hud"><span class="clock" id="hudClock">17:30</span><span class="badge fx" id="hudMode">Showing: fixed plan</span><span class="rush">Evening rush <i><b id="hudRush"></b></i></span><span id="hudSpeed"></span></div>
     <div class="zoom"><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button></div>
     <ol id="stepper" hidden></ol>
-    <div class="caption" aria-live="polite"><small id="capKicker"></small><h2 id="capTitle"></h2><p id="capText"></p></div>
+    <div class="caption" aria-live="polite"><small id="capKicker"></small><h2 id="capTitle"></h2><p id="capText"></p><p id="capOut"></p></div>
     <div id="ended" hidden><div><h3>End of the tour</h3><p>The street keeps running. Drag and zoom to explore, or switch between the fixed plan and SCOOT below.</p><button class="btn" type="button" id="replay">Play the tour again</button></div></div>
   </div>
   <div class="controls">
@@ -82,20 +85,34 @@
     <div class="cpanel" id="p2"><h3>2 · The queue SCOOT predicts</h3><p>SCOOT’s model queue against the real queue on the same approach. The closer the lines, the better the link is validated.</p><canvas id="c2"></canvas></div>
     <div class="cpanel" id="p3"><h3>3 · Signal timings now</h3><p>One bar per junction. Its length is the cycle time; the colours are the split. The marker shows where each junction is in its cycle.</p><canvas id="c3"></canvas></div>
     <div class="cpanel" id="p4"><h3>4 · Before and after</h3><p>Two identical streets with identical traffic, one on the fixed plan and one with SCOOT. <span id="res"></span></p><canvas id="c4"></canvas></div>
+    <div class="cpanel" id="p5"><h3>5 · Degree of saturation (DS)</h3><p>How full each approach is: traffic arriving in a cycle, divided by what its green can discharge. E, W and S are the eastbound, westbound and side-street links. The outlined bar is the link chosen in chart 1.</p><canvas id="c5"></canvas></div>
+    <div class="cpanel" id="p6"><h3>6 · The numbers behind one link</h3><p>What SCOOT holds for the link chosen in chart 1, and how its DS is worked out.</p><dl class="nums" id="nums"></dl></div>
   </section>
 
   <section class="prose">
-    <h2>What each chapter covers</h2>
-    <ol class="map">
-      <li><b>1 · The street</b>Four junctions on a fixed plan that never changes.</li>
-      <li><b>2 · Existing conditions</b>Counts, queue lengths, cruise time, pedestrians and parking: what to record before designing.</li>
-      <li><b>3–4 · How SCOOT sees</b>Upstream detector, LPUs, the cyclic flow profile and the model queue. More in <a href="foundation.html">Foundation</a>.</li>
-      <li><b>5 · How SCOOT decides</b>Split, offset and cycle time, a few seconds at a time. More in <a href="advanced.html">Advanced</a>.</li>
-      <li><b>6 · Network</b>Spacing, platoons, a shared cycle time and where the region boundary falls.</li>
-      <li><b>7 · Design steps</b>Nodes, links and stages; detector location; communications; cycle time limits; link validation; extra facilities; evaluation.</li>
-      <li><b>8 · Hardware</b>Loops, the controller cabinet with its outstation unit, the data network and the control centre.</li>
-      <li><b>9 · Evaluation</b>An evening rush on the fixed plan and on SCOOT, side by side.</li>
-    </ol>
+    <h2>The implementation steps at a glance</h2>
+    <p>The tour follows these steps in order. Each row says what you do, what you need first, and what you hand on to the next step.</p>
+    <table class="steps-table">
+      <thead><tr><th>Step</th><th>What you do</th><th>You need first</th><th>You produce</th></tr></thead>
+      <tbody>
+        <tr><td>Before step 1</td><td>Record existing conditions on the street.</td><td>Access to the site at the busy periods.</td><td>Counts, queue lengths, cruise times, crossing and parking notes.</td></tr>
+        <tr><td>1 · Nodes, links, stages</td><td>Number the junctions, list every approach, fix the stage order, group nodes into regions.</td><td>Counts and junction spacing.</td><td>The network list and the region boundary.</td></tr>
+        <tr><td>2 · Detector location</td><td>Choose one detector site per link, at its upstream end.</td><td>The link list and the measured queue lengths.</td><td>A site and a stop-line distance for every link.</td></tr>
+        <tr><td>3 · Communications</td><td>Connect every cabinet to the control centre and store a fallback plan.</td><td>Detector and cabinet positions.</td><td>A working data link, both ways, every second.</td></tr>
+        <tr><td>4 · Cycle time limits</td><td>Set the shortest and longest cycle for each region.</td><td>Stage minimums, crossing times and a policy on waiting.</td><td>A minimum and maximum cycle per region.</td></tr>
+        <tr><td>5 · Link validation</td><td>On street, tune journey time and saturation occupancy until the model queue matches the real one.</td><td>Live detector data.</td><td>A validated model and a trustworthy DS for every link.</td></tr>
+        <tr><td>Go live</td><td>Let SCOOT control the region and watch its split, offset and cycle decisions.</td><td>Every link validated.</td><td>A region running under SCOOT.</td></tr>
+        <tr><td>6 · Extra facilities</td><td>Add bus priority, pedestrian priority or congestion tools where needed.</td><td>A stable basic system.</td><td>Extras tuned one at a time.</td></tr>
+        <tr><td>7 · Evaluation</td><td>Compare delay before and after in matching conditions.</td><td>The before survey.</td><td>Evidence of what the scheme achieved.</td></tr>
+      </tbody>
+    </table>
+    <h2>Reading the degree of saturation</h2>
+    <ul class="notes">
+      <li><b>What it is.</b> DS = traffic arriving in one cycle ÷ what the green could discharge in that cycle. Both are measured in LPUs, so it needs a validated saturation occupancy to be right.</li>
+      <li><b>How to read it.</b> Below 80%: spare green. Around 90%: busy but working, and the level SCOOT aims for at the busiest node. Above 100%: more traffic arrives than can leave, so the queue grows every cycle.</li>
+      <li><b>How SCOOT uses it.</b> The split optimiser moves green towards the stage with the higher DS. The cycle optimiser finds the node with the highest DS in a region, the critical node, and changes the cycle to hold it near 90%.</li>
+      <li><b>Why it can read too high.</b> When a queue reaches back over the detector, the loop stays covered and the LPU count jumps. That is one reason the detector must sit beyond the normal queue.</li>
+    </ul>
     <h2>How to read this animation</h2>
     <ul class="notes">
       <li><b>It is a teaching simulation.</b> The road is an invented waterfront corridor in the style of a Gulf corniche. Its layout, traffic volumes and results are illustrative. They are not a survey or a forecast of any real road.</li>
@@ -103,7 +120,7 @@
       <li><b>The controller is SCOOT-style, not SCOOT.</b> It follows the published principles: upstream detectors read four times a second, a cyclic flow profile, a model queue, and three optimisers that move splits by 1 to 4 s, offsets by 4 s and the cycle by 4 or 8 s. The LPU coding and all parameter values are simplified.</li>
       <li><b>The comparison is fair but small.</b> Both streets get the same vehicles from the same random seed. The fixed plan is set for eastbound traffic at normal volumes, so it suffers when the rush arrives from the other direction. A fixed plan retimed for the rush would do better.</li>
     </ul>
-    <p class="muted">For slides or offline use: <a href="animations/SCOOT_process_tour.mp4">the recorded tour (MP4, about 5 minutes, 19 MB)</a>. Related: <a href="animations.html">the 20 short animations</a>, the <a href="scoot3d.html">3D street</a> and the <a href="groupwork.html">group work</a> questions.</p>
+    <p class="muted">For slides or offline use: <a href="animations/SCOOT_process_tour.mp4">the recorded tour (MP4, about 5.5 minutes)</a>. Related: <a href="animations.html">the 20 short animations</a>, the <a href="scoot3d.html">3D street</a> and the <a href="groupwork.html">group work</a> questions.</p>
   </section>
 </main>
 <script src="js/common.js"></script>
