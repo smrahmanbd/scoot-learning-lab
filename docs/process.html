@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SCOOT: the whole process, animated</title>
+<meta name="description" content="A beginner-friendly animated tour of a whole SCOOT project on a simulated waterfront road: existing conditions, how SCOOT works, regions, design steps, hardware and a before-and-after test.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 1.2rem 0 .7rem; }
+  .chip { font: 600 .92rem var(--body); border: 1.5px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+  .chip[aria-current="step"] { background: var(--band); border-color: var(--band); color: var(--band-fg); }
+  .stagebox { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #58b6cf; }
+  #stage { display: block; width: 100%; aspect-ratio: 16 / 9; touch-action: none; cursor: grab; }
+  .hud { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; pointer-events: none; }
+  .hud > * { background: rgba(11, 26, 38, .82); color: #fff; border-radius: 8px; padding: 4px 10px; font: 600 .92rem var(--body); }
+  .hud .clock { font-family: var(--mono); }
+  .badge.fx { background: #b3352b; } .badge.sc { background: #0d7a4c; }
+  .rush { display: flex; gap: 8px; align-items: center; } .rush i { display: block; width: 70px; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .25); overflow: hidden; } .rush i b { display: block; height: 100%; width: 0; background: #ffb62e; }
+  #hudSpeed:empty { display: none; }
+  .zoom { position: absolute; top: 10px; right: 10px; display: grid; gap: 4px; }
+  .zoom button { width: 34px; height: 34px; border-radius: 8px; border: 0; background: rgba(11, 26, 38, .82); color: #fff; font: 700 1.2rem var(--body); cursor: pointer; }
+  #stepper { position: absolute; top: 52px; left: 10px; margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; pointer-events: none; }
+  #stepper[hidden] { display: none; }
+  #stepper li { background: rgba(255, 255, 255, .88); color: #17263a; border-radius: 8px; padding: 3px 10px 3px 4px; font: 600 .88rem var(--body); display: flex; gap: 7px; align-items: center; opacity: .55; }
+  #stepper li b { width: 22px; height: 22px; border-radius: 50%; background: #9aa6b2; color: #fff; display: grid; place-items: center; font-size: .8rem; }
+  #stepper li.on { opacity: 1; background: #ffd24a; } #stepper li.on b { background: #17263a; }
+  #stepper li.done { opacity: .9; } #stepper li.done b { background: #0d7a4c; }
+  .caption { position: absolute; left: 10px; right: 10px; bottom: 10px; max-width: 760px; background: rgba(11, 26, 38, .88); color: #fff; border-radius: 12px; padding: 10px 16px 12px; pointer-events: none; }
+  .caption small { font: 700 .76rem var(--body); letter-spacing: .13em; text-transform: uppercase; color: #ffd24a; }
+  .caption h2 { font-size: 1.45rem; margin: 2px 0 4px; color: #fff; }
+  .caption p { margin: 0; font-size: 1.04rem; line-height: 1.4; } .caption p b { color: #ffd24a; }
+  #ended { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(11, 26, 38, .45); }
+  #ended[hidden] { display: none; }
+  #ended div { background: var(--surface); color: var(--fg); border-radius: 14px; padding: 18px 22px; text-align: center; max-width: 420px; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: .8rem 0 0; }
+  .controls label { font-size: .95rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .controls select { font: 500 .95rem var(--body); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+  .console { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 1rem; }
+  @media (max-width: 760px) { .console { grid-template-columns: 1fr; } .caption h2 { font-size: 1.1rem; } .caption p { font-size: .9rem; } #stepper { display: none; } }
+  .cpanel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; transition: box-shadow .3s, border-color .3s; }
+  .cpanel.hot { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber); }
+  .cpanel h3 { font-size: 1.15rem; } .cpanel p { margin: 2px 0 6px; font-size: .9rem; color: var(--muted); }
+  .cpanel canvas { width: 100%; height: 150px; display: block; }
+  .notes li { margin: .35rem 0; }
+  .map { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; padding: 0; list-style: none; margin-top: 1rem; }
+  .map li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  .map b { font: 700 1.1rem var(--display); display: block; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="level-head prose">
+    <h1>The whole SCOOT process, animated</h1>
+    <p class="lede">One street, start to finish: survey it, see how SCOOT reads it, choose the junctions, follow the seven design steps, install the hardware, then test it in an evening rush. About five minutes. No formulas.</p>
+  </header>
+
+  <div class="chips" id="chips" role="group" aria-label="Chapters"></div>
+  <div class="stagebox">
+    <canvas id="stage" aria-label="Animated top view of a waterfront road with four signalised junctions, moving traffic, pedestrians and detectors."></canvas>
+    <div class="hud"><span class="clock" id="hudClock">17:30</span><span class="badge fx" id="hudMode">Showing: fixed plan</span><span class="rush">Evening rush <i><b id="hudRush"></b></i></span><span id="hudSpeed"></span></div>
+    <div class="zoom"><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button></div>
+    <ol id="stepper" hidden></ol>
+    <div class="caption" aria-live="polite"><small id="capKicker"></small><h2 id="capTitle"></h2><p id="capText"></p></div>
+    <div id="ended" hidden><div><h3>End of the tour</h3><p>The street keeps running. Drag and zoom to explore, or switch between the fixed plan and SCOOT below.</p><button class="btn" type="button" id="replay">Play the tour again</button></div></div>
+  </div>
+  <div class="controls">
+    <button class="btn ghost" type="button" id="prev">◀ Back</button>
+    <button class="btn" type="button" id="play" aria-pressed="true">Pause</button>
+    <button class="btn ghost" type="button" id="next">Next ▶</button>
+    <button class="btn ghost" type="button" id="restart">Restart</button>
+    <button class="btn ghost" type="button" id="tourBtn" hidden>Return to the tour</button>
+    <label>Speed <select id="speed"><option value="0.5">Slow</option><option value="1" selected>Normal</option><option value="2">Fast</option></select></label>
+    <label>Show <select id="view"><option value="auto" selected>Follow the tour</option><option value="F">Fixed plan street</option><option value="S">SCOOT street</option></select></label>
+    <label>Evening rush <select id="rush"><option value="auto" selected>Follow the tour</option><option value="on">On</option><option value="off">Off</option></select></label>
+  </div>
+
+  <section class="console" aria-label="SCOOT console">
+    <div class="cpanel" id="p1"><h3>1 · When traffic arrives</h3><p>The cyclic flow profile for <select id="link" aria-label="Approach"><option value="0-eb">J1 eastbound</option><option value="1-eb" selected>J2 eastbound</option><option value="1-wb">J2 westbound</option><option value="1-side">J2 side street</option><option value="2-eb">J3 eastbound</option><option value="2-wb">J3 westbound</option><option value="3-eb">J4 eastbound</option></select>. Tall bars inside the shaded green mean a platoon is meeting a green light.</p><canvas id="c1"></canvas></div>
+    <div class="cpanel" id="p2"><h3>2 · The queue SCOOT predicts</h3><p>SCOOT’s model queue against the real queue on the same approach. The closer the lines, the better the link is validated.</p><canvas id="c2"></canvas></div>
+    <div class="cpanel" id="p3"><h3>3 · Signal timings now</h3><p>One bar per junction. Its length is the cycle time; the colours are the split. The marker shows where each junction is in its cycle.</p><canvas id="c3"></canvas></div>
+    <div class="cpanel" id="p4"><h3>4 · Before and after</h3><p>Two identical streets with identical traffic, one on the fixed plan and one with SCOOT. <span id="res"></span></p><canvas id="c4"></canvas></div>
+  </section>
+
+  <section class="prose">
+    <h2>What each chapter covers</h2>
+    <ol class="map">
+      <li><b>1 · The street</b>Four junctions on a fixed plan that never changes.</li>
+      <li><b>2 · Existing conditions</b>Counts, queue lengths, cruise time, pedestrians and parking: what to record before designing.</li>
+      <li><b>3–4 · How SCOOT sees</b>Upstream detector, LPUs, the cyclic flow profile and the model queue. More in <a href="foundation.html">Foundation</a>.</li>
+      <li><b>5 · How SCOOT decides</b>Split, offset and cycle time, a few seconds at a time. More in <a href="advanced.html">Advanced</a>.</li>
+      <li><b>6 · Network</b>Spacing, platoons, a shared cycle time and where the region boundary falls.</li>
+      <li><b>7 · Design steps</b>Nodes, links and stages; detector location; communications; cycle time limits; link validation; extra facilities; evaluation.</li>
+      <li><b>8 · Hardware</b>Loops, the controller cabinet with its outstation unit, the data network and the control centre.</li>
+      <li><b>9 · Evaluation</b>An evening rush on the fixed plan and on SCOOT, side by side.</li>
+    </ol>
+    <h2>How to read this animation</h2>
+    <ul class="notes">
+      <li><b>It is a teaching simulation.</b> The road is an invented waterfront corridor in the style of a Gulf corniche. Its layout, traffic volumes and results are illustrative. They are not a survey or a forecast of any real road.</li>
+      <li><b>Every car drives itself.</b> Each driver picks a speed, follows the car ahead, changes lane and stops for red, so queues and platoons form on their own. Nothing on screen is a pre-drawn path.</li>
+      <li><b>The controller is SCOOT-style, not SCOOT.</b> It follows the published principles: upstream detectors read four times a second, a cyclic flow profile, a model queue, and three optimisers that move splits by 1 to 4 s, offsets by 4 s and the cycle by 4 or 8 s. The LPU coding and all parameter values are simplified.</li>
+      <li><b>The comparison is fair but small.</b> Both streets get the same vehicles from the same random seed. The fixed plan is set for eastbound traffic at normal volumes, so it suffers when the rush arrives from the other direction. A fixed plan retimed for the rush would do better.</li>
+    </ul>
+    <p class="muted">For slides or offline use: <a href="animations/SCOOT_process_tour.mp4">the recorded tour (MP4, about 5 minutes, 19 MB)</a>. Related: <a href="animations.html">the 20 short animations</a>, the <a href="scoot3d.html">3D street</a> and the <a href="groupwork.html">group work</a> questions.</p>
+  </section>
+</main>
+<script src="js/common.js"></script>
+<script src="js/corridor-engine.js"></script>
+<script src="js/corridor-view.js"></script>
+</body>
+</html>
